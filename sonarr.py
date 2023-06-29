@@ -8,7 +8,7 @@ API_KEY = os.getenv("SONARR_API_KEY")
 BASE_URL = os.getenv("SONARR_BASE_URL")
 
 def get_sonarr_id(tvdb_id):
-    url = BASE_URL
+    url = f"{BASE_URL}/series"
     headers = {"X-Api-Key": API_KEY}
     params = {"tvdbId": tvdb_id}
 
@@ -23,7 +23,7 @@ def get_sonarr_id(tvdb_id):
         return None
 
 def delete_unplayed_series(sonarr_id):
-    url = f"{BASE_URL}/{sonarr_id}"
+    url = f"{BASE_URL}/series/{sonarr_id}"
     headers = {"X-Api-Key": API_KEY}
     params = {'deleteFiles': 'true'}
 

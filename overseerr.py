@@ -10,7 +10,7 @@ BASE_URL = os.getenv("OVERSEERR_BASE_URL")
 FETCH_LIMIT = 1000 # How many requests to fetch
 
 def fetch_overseerr_requests():
-    url = BASE_URL
+    url = f"{BASE_URL}/request"
     headers = {"X-API-KEY": API_KEY}
     params = {"take": FETCH_LIMIT}
 
@@ -34,7 +34,7 @@ def find_and_delete_request(item_id):
             delete_request(request['id'])
 
 def delete_request(request_id):
-    url = f"{BASE_URL}/{request_id}"
+    url = f"{BASE_URL}/request/{request_id}"
     headers = {"X-API-KEY": API_KEY}
 
     response = requests.delete(url, headers=headers)

@@ -8,7 +8,7 @@ API_KEY = os.getenv("RADARR_API_KEY")
 BASE_URL = os.getenv("RADARR_BASE_URL")
 
 def get_radarr_id(tmdb_id):
-    url = BASE_URL
+    url = f"{BASE_URL}/movie"
     headers = {"X-Api-Key": API_KEY}
     params = {"tmdbId": tmdb_id}
 
@@ -23,7 +23,7 @@ def get_radarr_id(tmdb_id):
         return None
 
 def delete_unplayed_movie(radarr_id):
-    url = f"{BASE_URL}/{radarr_id}"
+    url = f"{BASE_URL}/movie/{radarr_id}"
     headers = {"X-Api-Key": API_KEY}
     params = {'deleteFiles': 'true'}
 
