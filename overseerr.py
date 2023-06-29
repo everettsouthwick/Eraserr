@@ -6,10 +6,17 @@ load_dotenv()
 
 API_KEY = os.getenv("OVERSEERR_API_KEY")
 BASE_URL = os.getenv("OVERSEERR_BASE_URL")
-
-FETCH_LIMIT = 1000 # How many requests to fetch
+FETCH_LIMIT = os.getenv("OVERSEERR_FETCH_LIMIT")
 
 def fetch_overseerr_requests():
+    """
+    Fetches a list of requests from the Overseerr API.
+
+    Returns:
+        A list of request objects.
+    Raises:
+        Exception: If the API request fails.
+    """
     url = f"{BASE_URL}/request"
     headers = {"X-API-KEY": API_KEY}
     params = {"take": FETCH_LIMIT}
@@ -19,10 +26,18 @@ def fetch_overseerr_requests():
         request_data = response.json()
         return request_data['results']
     else:
-        print(f"Fetching Overseerr requests failed with status code {response.status_code}")
-        return None
+        raise Exception(f"Fetching Overseerr requests failed with status code {response.status_code}")
 
 def find_and_delete_request(item_id):
+    """
+    Finds and deletes a request with the given item ID from the Overseerr API.
+
+    Args:
+        item_id: The ID of the item to delete.
+
+    Returns:
+        None
+    """
     requests = fetch_overseerr_requests()
     if requests is None:
         return
@@ -34,6 +49,18 @@ def find_and_delete_request(item_id):
             delete_request(request['id'])
 
 def delete_request(request_id):
+    """
+    Deletes a request with the given ID from the Overseerr API.
+
+    Args:
+        request_id (int): The ID of the request to delete.
+
+    Returns:
+        None
+
+    Raises:
+        Exception: If the API request fails.
+    """
     url = f"{BASE_URL}/request/{request_id}"
     headers = {"X-API-KEY": API_KEY}
 
@@ -41,4 +68,4 @@ def delete_request(request_id):
     if response.status_code == 200:
         print(f"Request {request_id} deleted successfully.")
     else:
-        print(f"Deletion of request {request_id} failed with status code {response.status_code}")
+        raise Exception(f"Deletion of request {request_id} failed with status code {response.status_code}")
