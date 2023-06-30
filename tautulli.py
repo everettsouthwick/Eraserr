@@ -89,6 +89,7 @@ def fetch_and_count_unplayed_titles(section_id):
     threshold_timestamp = time.time() - DAYS_THRESHOLD * 24 * 60 * 60
     start = 0
     max_executions_allowed = 1000
+    is_first_loop = True
     
     while True and max_executions_allowed > 0:
         params = {
@@ -98,7 +99,8 @@ def fetch_and_count_unplayed_titles(section_id):
             "order_column": "last_played",
             "order_dir": "asc",
             "length": FETCH_LIMIT,
-            "start": start
+            "start": start,
+            "refresh": "true" if is_first_loop else "false"
         }
         response = requests.get(BASE_URL, params=params)
         
@@ -127,7 +129,9 @@ def fetch_and_count_unplayed_titles(section_id):
         # Increment the 'start' parameter for the next iteration
         start += FETCH_LIMIT
         max_executions_allowed -= 1
+        is_first_loop = False 
 
     return count, item_ids
+
 
 
