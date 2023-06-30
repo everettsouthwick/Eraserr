@@ -9,9 +9,9 @@ API_KEY = os.getenv("TAUTULLI_API_KEY")
 BASE_URL = os.getenv("TAUTULLI_BASE_URL")
 
 DEFAULT_DAYS_THRESHOLD = 30
-DEFAULT_FETCH_LIMIT = '25'
+DEFAULT_FETCH_LIMIT = 25
 DAYS_THRESHOLD = int(os.getenv("DAYS_THRESHOLD", DEFAULT_DAYS_THRESHOLD)) # How many days to wait before deleting unplayed media
-FETCH_LIMIT = os.getenv("TAUTULLI_FETCH_LIMIT", DEFAULT_FETCH_LIMIT) # How many items to fetch at a time
+FETCH_LIMIT = int(os.getenv("TAUTULLI_FETCH_LIMIT", DEFAULT_FETCH_LIMIT)) # How many items to fetch at a time
 
 def fetch_libraries(section_type):
     params = {
