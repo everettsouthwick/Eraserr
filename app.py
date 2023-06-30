@@ -1,4 +1,4 @@
-from tautulli import fetch_and_count_unplayed_titles
+from tautulli import fetch_libraries, fetch_and_count_unplayed_titles
 from radarr import find_and_delete_movie
 from sonarr import find_and_delete_series
 from overseerr import find_and_delete_request
@@ -9,15 +9,21 @@ import os
 load_dotenv()
 
 DRY_RUN = os.getenv("DRY_RUN", 'False').lower() in ('true', '1', 't')
-MOVIE_SECTION_ID = os.getenv("TAUTULLI_MOVIE_SECTION_ID")
-TV_SECTION_ID = os.getenv("TAUTULLI_TV_SECTION_ID")
 
 def fetch_movies():
     """
     Fetches unplayed movies and deletes them if they are eligible for deletion.
     """
-    count, tmdb_ids = fetch_and_count_unplayed_titles(MOVIE_SECTION_ID)
-    print(f"There are {count} movies eligible for deletion. TMDB IDs: {tmdb_ids}")
+    total_count = 0
+    all_tmdb_ids = []
+
+    section_ids = fetch_libraries("movie")
+    for section_id in section_ids:
+        count, tmdb_ids = fetch_and_count_unplayed_titles(section_id)
+        total_count += count
+        all_tmdb_ids.extend(tmdb_ids)
+
+    print(f"There are {total_count} movies eligible for deletion. TMDB IDs: {all_tmdb_ids}")
     total_size = 0
     if not DRY_RUN:
         for tmdb_id in tmdb_ids:
@@ -36,8 +42,16 @@ def fetch_series():
     """
     Fetches unplayed TV shows and deletes them if they are eligible for deletion.
     """
-    count, tvdb_ids = fetch_and_count_unplayed_titles(TV_SECTION_ID)
-    print(f"There are {count} tv shows eligible for deletion. TVDB IDs: {tvdb_ids}")
+    total_count = 0
+    all_tvdb_ids = []
+
+    section_ids = fetch_libraries("show")
+    for section_id in section_ids:
+        count, tvdb_ids = fetch_and_count_unplayed_titles(section_id)
+        total_count += count
+        all_tvdb_ids.extend(tvdb_ids)
+
+    print(f"There are {total_count} tv shows eligible for deletion. TVDB IDs: {all_tvdb_ids}")
     total_size = 0
     if not DRY_RUN:
         for tvdb_id in tvdb_ids:
