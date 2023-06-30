@@ -6,6 +6,8 @@ load_dotenv()
 
 API_KEY = os.getenv("OVERSEERR_API_KEY")
 BASE_URL = os.getenv("OVERSEERR_BASE_URL")
+
+DEFAULT_FETCH_LIMIT = '10'
 FETCH_LIMIT = os.getenv("OVERSEERR_FETCH_LIMIT")
 
 def fetch_overseerr_requests():
@@ -19,14 +21,35 @@ def fetch_overseerr_requests():
     """
     url = f"{BASE_URL}/request"
     headers = {"X-API-KEY": API_KEY}
-    params = {"take": FETCH_LIMIT}
 
-    response = requests.get(url, headers=headers, params=params)
-    if response.status_code == 200:
+    requests_list = []
+    page = 1
+    max_executions_allowed = 1000
+
+    while True and max_executions_allowed > 0:
+        params = {
+            "take": FETCH_LIMIT, 
+            "page": page
+        }
+        response = requests.get(url, headers=headers, params=params)
+
+        if response.status_code != 200:
+            raise Exception(f"Fetching Overseerr requests failed with status code {response.status_code}")
+        
         request_data = response.json()
-        return request_data['results']
-    else:
-        raise Exception(f"Fetching Overseerr requests failed with status code {response.status_code}")
+
+        # Break loop if no more data
+        if not request_data['results']:
+            break
+        
+        requests_list.extend(request_data['results'])
+
+        # Increment the 'page' parameter for the next iteration
+        page += 1
+        max_executions_allowed -= 1
+
+    return requests_list
+
 
 def find_and_delete_request(item_id):
     """
