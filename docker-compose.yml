@@ -1,0 +1,22 @@
+version: '3'
+services:
+  eraserr:
+    env_file: .env
+    container_name: eraserr
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment: 
+      TAUTULLI_API_KEY: ${TAUTULLI_API_KEY}
+      TAUTULLI_BASE_URL: ${TAUTULLI_BASE_URL}
+      TAUTULLI_FETCH_LIMIT: ${TAUTULLI_FETCH_LIMIT}
+      RADARR_API_KEY: ${RADARR_API_KEY}
+      RADARR_BASE_URL: ${RADARR_BASE_URL}
+      SONARR_API_KEY: ${SONARR_API_KEY}
+      SONARR_BASE_URL: ${SONARR_BASE_URL}
+      OVERSEERR_API_KEY: ${OVERSEERR_API_KEY}
+      OVERSEERR_BASE_URL: ${OVERSEERR_BASE_URL}
+      OVERSEERR_FETCH_LIMIT: ${OVERSEERR_FETCH_LIMIT}
+      DAYS_THRESHOLD: ${DAYS_THRESHOLD}
+      DRY_RUN: ${DRY_RUN}
+      PYTHONUNBUFFERED: 1

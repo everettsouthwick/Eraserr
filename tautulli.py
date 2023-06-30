@@ -25,9 +25,10 @@ def fetch_libraries(section_type):
         raise Exception(f"Fetching libraries failed with status code {response.status_code}")
     
     libraries = response.json()
+    section_ids = []
 
     if not libraries["response"]["data"]:
-        return None
+        return section_ids
 
     section_ids = [library["section_id"] for library in libraries["response"]["data"] 
                    if library["section_type"] == section_type]
