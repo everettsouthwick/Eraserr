@@ -26,7 +26,7 @@ def fetch_movies():
     print(f"There are {total_count} movies eligible for deletion. TMDB IDs: {all_tmdb_ids}")
     total_size = 0
     if not DRY_RUN:
-        for tmdb_id in tmdb_ids:
+        for tmdb_id in all_tmdb_ids:
             try:
                 total_size += find_and_delete_movie(tmdb_id)
                 find_and_delete_request(tmdb_id)
@@ -54,7 +54,7 @@ def fetch_series():
     print(f"There are {total_count} tv shows eligible for deletion. TVDB IDs: {all_tvdb_ids}")
     total_size = 0
     if not DRY_RUN:
-        for tvdb_id in tvdb_ids:
+        for tvdb_id in all_tvdb_ids:
             try:
                 total_size += find_and_delete_series(tvdb_id)
                 find_and_delete_request(tvdb_id)

@@ -21,13 +21,18 @@ def fetch_libraries(section_type):
 
     response = requests.get(BASE_URL, params=params)
 
-    if response.status_code == 200:
-        libraries_data = response.json()
-        section_ids = [library["section_id"] for library in libraries_data["response"]["data"]
-                       if library["section_type"] is section_type]
-        return section_ids
-    else:
+    if response.status_code != 200:
         raise Exception(f"Fetching libraries failed with status code {response.status_code}")
+    
+    libraries = response.json()
+
+    if not libraries["response"]["data"]:
+        return None
+
+    section_ids = [library["section_id"] for library in libraries["response"]["data"] 
+                   if library["section_type"] == section_type]
+    return section_ids
+        
 
 def fetch_metadata(rating_key):
     """
