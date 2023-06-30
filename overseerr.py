@@ -23,13 +23,13 @@ def fetch_overseerr_requests():
     headers = {"X-API-KEY": API_KEY}
 
     requests_list = []
-    page = 1
+    skip = 0
     max_executions_allowed = 1000
 
     while True and max_executions_allowed > 0:
         params = {
             "take": FETCH_LIMIT, 
-            "page": page
+            "skip": skip,
         }
         response = requests.get(url, headers=headers, params=params)
 
@@ -45,7 +45,7 @@ def fetch_overseerr_requests():
         requests_list.extend(request_data['results'])
 
         # Increment the 'page' parameter for the next iteration
-        page += 1
+        skip += FETCH_LIMIT
         max_executions_allowed -= 1
 
     return requests_list
