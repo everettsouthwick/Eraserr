@@ -2,7 +2,7 @@ version: '3'
 services:
   eraserr:
     env_file: .env
-    container_name: eraserr
+    image: ecsouthwick/eraserr
     build:
       context: .
       dockerfile: Dockerfile
