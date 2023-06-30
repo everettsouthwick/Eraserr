@@ -14,6 +14,7 @@ DAYS_THRESHOLD = int(os.getenv("DAYS_THRESHOLD", DEFAULT_DAYS_THRESHOLD)) # How 
 FETCH_LIMIT = os.getenv("TAUTULLI_FETCH_LIMIT", DEFAULT_FETCH_LIMIT) # How many items to fetch at a time
 
 def fetch_libraries(section_type):
+    print(BASE_URL)
     params = {
         "apikey": API_KEY,
         "cmd": "get_libraries"
