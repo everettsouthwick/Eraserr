@@ -66,9 +66,12 @@ def find_and_delete_request(item_id):
         return
 
     for request in requests:
-        if 'media' in request and 'mediaType' in request['media'] and 'tv' in request['media']['mediaType'] and 'tvdbId' in request['media'] and request['media']['tvdbId'] == item_id:
+        if request['media'] is None or request['media']['mediaType'] is None:
+            continue
+        
+        if request['media']['mediaType'] == "movie" and request['media']['tmdbId'] == item_id:
             delete_request(request['id'])
-        elif 'media' in request and 'mediaType' in request['media'] and 'movie' in request['media']['mediaType'] and 'tmdbId' in request['media'] and request['media']['tmdbId'] == item_id:
+        elif request['media']['mediaType'] == "tv" and request['media']['tvdbId'] == item_id:
             delete_request(request['id'])
 
 def delete_request(request_id):
