@@ -85,8 +85,6 @@ job()
 # Then schedule it to run subsequently every SCHEDULE_INTERVAL seconds
 schedule.every(SCHEDULE_INTERVAL).seconds.do(job)
 
-schedule.every(SCHEDULE_INTERVAL).seconds.do(job)
-
 while True:
     schedule.run_pending()
     time.sleep(1)
