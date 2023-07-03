@@ -5,10 +5,23 @@ from overseerr import find_and_delete_request
 from dotenv import load_dotenv
 from util import convert_bytes
 import os
+import schedule
+import time
 
 load_dotenv()
 
 DRY_RUN = os.getenv("DRY_RUN", 'False').lower() in ('true', '1', 't')
+DEFAULT_SCHEDULE_INTERVAL = 86400
+SCHEDULE_INTERVAL = int(os.getenv("SCHEDULE_INTERVAL", DEFAULT_SCHEDULE_INTERVAL))
+
+def job():
+    """
+    This function fetches unplayed movies and TV shows and deletes them if they are eligible for deletion.
+    """
+    print("Starting job")
+    fetch_movies()
+    fetch_series()
+    print("Job finished")
 
 def fetch_movies():
     """
@@ -66,5 +79,8 @@ def fetch_series():
 
     print('Total freed up from series: ' + convert_bytes(total_size))
 
-fetch_movies()
-fetch_series()
+schedule.every(SCHEDULE_INTERVAL).seconds.do(job)
+
+while True:
+    schedule.run_pending()
+    time.sleep(1)
