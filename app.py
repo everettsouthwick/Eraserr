@@ -79,6 +79,12 @@ def fetch_series():
 
     print('Total freed up from series: ' + convert_bytes(total_size))
 
+# Run the job function immediately on first execution
+job()
+
+# Then schedule it to run subsequently every SCHEDULE_INTERVAL seconds
+schedule.every(SCHEDULE_INTERVAL).seconds.do(job)
+
 schedule.every(SCHEDULE_INTERVAL).seconds.do(job)
 
 while True:
