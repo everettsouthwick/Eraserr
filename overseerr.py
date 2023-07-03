@@ -10,19 +10,19 @@ BASE_URL = os.getenv("OVERSEERR_BASE_URL")
 DEFAULT_FETCH_LIMIT = 10
 FETCH_LIMIT = int(os.getenv("OVERSEERR_FETCH_LIMIT"), DEFAULT_FETCH_LIMIT)
 
-def fetch_overseerr_requests():
+def fetch_overseerr_media():
     """
-    Fetches a list of requests from the Overseerr API.
+    Fetches a list of media from the Overseerr API.
 
     Returns:
-        A list of request objects.
+        A list of media objects.
     Raises:
         Exception: If the API request fails.
     """
-    url = f"{BASE_URL}/request"
+    url = f"{BASE_URL}/media"
     headers = {"X-API-KEY": API_KEY}
 
-    requests_list = []
+    media_list = []
     skip = 0
     max_executions_allowed = 1000
 
@@ -34,7 +34,7 @@ def fetch_overseerr_requests():
         response = requests.get(url, headers=headers, params=params)
 
         if response.status_code != 200:
-            raise Exception(f"Fetching Overseerr requests failed with status code {response.status_code}")
+            raise Exception(f"Fetching Overseerr media failed with status code {response.status_code}")
         
         request_data = response.json()
 
@@ -42,18 +42,18 @@ def fetch_overseerr_requests():
         if not request_data['results']:
             break
         
-        requests_list.extend(request_data['results'])
+        media_list.extend(request_data['results'])
 
         # Increment the 'page' parameter for the next iteration
         skip += FETCH_LIMIT
         max_executions_allowed -= 1
 
-    return requests_list
+    return media_list
 
 
-def find_and_delete_request(item_id):
+def find_and_delete_media(item_id):
     """
-    Finds and deletes a request with the given item ID from the Overseerr API.
+    Finds and deletes media with the given item ID from the Overseerr API.
 
     Args:
         item_id: The ID of the item to delete.
@@ -61,25 +61,27 @@ def find_and_delete_request(item_id):
     Returns:
         None
     """
-    requests = fetch_overseerr_requests()
-    if requests is None:
+    media = fetch_overseerr_media()
+    if media is None:
         return
 
-    for request in requests:
-        if request['media'] is None or request['media']['mediaType'] is None:
+    for item in media:
+        if item['mediaType'] is None:
             continue
         
-        if request['media']['mediaType'] == "movie" and request['media']['tmdbId'] == item_id:
-            delete_request(request['id'])
-        elif request['media']['mediaType'] == "tv" and request['media']['tvdbId'] == item_id:
-            delete_request(request['id'])
+        if item['mediaType'] == "movie" and item['tmdbId'] == int(item_id):
+            delete_media(item['id'])
+            break
+        elif item['mediaType'] == "tv" and item['tvdbId'] == int(item_id):
+            delete_media(item['id'])
+            break
 
-def delete_request(request_id):
+def delete_media(media_id):
     """
-    Deletes a request with the given ID from the Overseerr API.
+    Deletes media with the given ID from the Overseerr API.
 
     Args:
-        request_id (int): The ID of the request to delete.
+        media_id (int): The ID of the media to delete.
 
     Returns:
         None
@@ -87,11 +89,11 @@ def delete_request(request_id):
     Raises:
         Exception: If the API request fails.
     """
-    url = f"{BASE_URL}/request/{request_id}"
+    url = f"{BASE_URL}/media/{media_id}"
     headers = {"X-API-KEY": API_KEY}
 
     response = requests.delete(url, headers=headers)
-    if response.status_code == 200:
-        print(f"Request {request_id} deleted successfully.")
+    if response.status_code == 204:
+        print(f"Media {media_id} deleted successfully.")
     else:
-        raise Exception(f"Deletion of request {request_id} failed with status code {response.status_code}")
+        raise Exception(f"Deletion of media {media_id} failed with status code {response.status_code}")

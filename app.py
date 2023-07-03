@@ -1,7 +1,7 @@
 from tautulli import fetch_libraries, fetch_and_count_unplayed_titles
 from radarr import find_and_delete_movie
 from sonarr import find_and_delete_series
-from overseerr import find_and_delete_request
+from overseerr import find_and_delete_media
 from dotenv import load_dotenv
 from util import convert_bytes
 import os
@@ -42,7 +42,7 @@ def fetch_movies():
         for tmdb_id in all_tmdb_ids:
             try:
                 total_size += find_and_delete_movie(tmdb_id)
-                find_and_delete_request(tmdb_id)
+                find_and_delete_media(tmdb_id)
             except Exception as ex:
                 print(f"Error: {ex}")
                 continue
@@ -70,7 +70,7 @@ def fetch_series():
         for tvdb_id in all_tvdb_ids:
             try:
                 total_size += find_and_delete_series(tvdb_id)
-                find_and_delete_request(tvdb_id)
+                find_and_delete_media(tvdb_id)
             except Exception as ex:
                 print(f"Error: {ex}")
                 continue
