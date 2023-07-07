@@ -8,6 +8,8 @@ load_dotenv()
 API_KEY = os.getenv("SONARR_API_KEY")
 BASE_URL = os.getenv("SONARR_BASE_URL")
 
+DRY_RUN = os.getenv("DRY_RUN", "False").lower() in ("true", "1", "t")
+
 
 def get_sonarr_id(tvdb_id):
     """
@@ -74,8 +76,12 @@ def delete_unplayed_series(sonarr_id, title, size_on_disk):
     headers = {"X-Api-Key": API_KEY}
     params = {"deleteFiles": "true"}
 
+    if DRY_RUN:
+        print(f"SONARR :: DRY RUN :: {title} would be deleted. {convert_bytes(size_on_disk)} would be freed up")
+        return
+
     response = requests.delete(url, headers=headers, params=params)
     if response.status_code == 200:
-        print(f"{title} deleted successfully. {convert_bytes(size_on_disk)} freed up.")
+        print(f"SONARR :: {title} deleted successfully. {convert_bytes(size_on_disk)} freed up")
     else:
         raise Exception(f"Deletion failed with status code {response.status_code}")

@@ -108,7 +108,7 @@ def refresh_library(section_ids, section_type):
     for section_id in section_ids:
         refresh_library_in_section(section_id)
 
-    print(f"Tautulli library refresh complete for {section_type}.")
+    print(f"TAUTULLI :: Library refresh complete for {section_type}")
 
 
 def fetch_and_count_unplayed_titles_in_section(section_id):
@@ -193,4 +193,6 @@ def fetch_and_count_unplayed_titles(section_ids):
         total_count += count
         all_item_ids.extend(item_ids)
 
-    return total_count, all_item_ids
+    print(f"TAUTULLI :: There are {total_count} items eligible for deletion. IDs: {all_item_ids}")
+
+    return all_item_ids
