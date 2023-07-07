@@ -10,6 +10,7 @@ BASE_URL = os.getenv("OVERSEERR_BASE_URL")
 DEFAULT_FETCH_LIMIT = 10
 FETCH_LIMIT = int(os.getenv("OVERSEERR_FETCH_LIMIT"), DEFAULT_FETCH_LIMIT)
 
+
 def fetch_overseerr_media():
     """
     Fetches a list of media from the Overseerr API.
@@ -28,21 +29,21 @@ def fetch_overseerr_media():
 
     while True and max_executions_allowed > 0:
         params = {
-            "take": FETCH_LIMIT, 
+            "take": FETCH_LIMIT,
             "skip": skip,
         }
         response = requests.get(url, headers=headers, params=params)
 
         if response.status_code != 200:
             raise Exception(f"Fetching Overseerr media failed with status code {response.status_code}")
-        
+
         request_data = response.json()
 
         # Break loop if no more data
-        if not request_data['results']:
+        if not request_data["results"]:
             break
-        
-        media_list.extend(request_data['results'])
+
+        media_list.extend(request_data["results"])
 
         # Increment the 'page' parameter for the next iteration
         skip += FETCH_LIMIT
@@ -66,15 +67,16 @@ def find_and_delete_media(item_id):
         return
 
     for item in media:
-        if item['mediaType'] is None:
+        if item["mediaType"] is None:
             continue
-        
-        if item['mediaType'] == "movie" and item['tmdbId'] == int(item_id):
-            delete_media(item['id'])
+
+        if item["mediaType"] == "movie" and item["tmdbId"] == int(item_id):
+            delete_media(item["id"])
             break
-        elif item['mediaType'] == "tv" and item['tvdbId'] == int(item_id):
-            delete_media(item['id'])
+        elif item["mediaType"] == "tv" and item["tvdbId"] == int(item_id):
+            delete_media(item["id"])
             break
+
 
 def delete_media(media_id):
     """
