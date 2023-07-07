@@ -2,6 +2,7 @@ from tautulli import fetch_libraries, fetch_and_count_unplayed_titles, refresh_l
 from radarr import find_and_delete_movie
 from sonarr import find_and_delete_series
 from overseerr import find_and_delete_media
+from plex import find_and_update_library
 import os
 from dotenv import load_dotenv
 from util import convert_bytes
@@ -45,6 +46,7 @@ def fetch_movies():
             except Exception as ex:
                 print(f"Error: {ex}")
                 continue
+        find_and_update_library("movie")
         refresh_library(section_ids, "movie")
     else:
         print("Dry run set to true. Skipping deletion process")
@@ -71,6 +73,7 @@ def fetch_series():
             except Exception as ex:
                 print(f"Error: {ex}")
                 continue
+        find_and_update_library("show")
         refresh_library(section_ids, "show")
     else:
         print("Dry run set to true. Skipping deletion process")
