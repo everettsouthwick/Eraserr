@@ -21,10 +21,21 @@ def job():
     """
     This function fetches unplayed movies and TV shows and deletes them if they are eligible for deletion.
     """
-    print("Starting job")
-    fetch_movies()
-    fetch_series()
-    print("Job finished")
+    print("JOB :: Starting")
+
+    total_size = fetch_movies()
+    if DRY_RUN:
+        print("JOB :: DRY RUN :: Would have freed up from movies: " + str(total_size))
+    else:
+        print("JOB :: Total freed up from movies: " + str(total_size))
+
+    total_size = fetch_series()
+    if DRY_RUN:
+        print("JOB :: DRY RUN :: Would have freed up from series: " + str(total_size))
+    else:
+        print("JOB :: Total freed up from series: " + str(total_size))
+
+    print("JOB :: Finished")
 
 
 def fetch_movies():
@@ -32,26 +43,22 @@ def fetch_movies():
     Fetches unplayed movies and deletes them if they are eligible for deletion.
     """
     section_ids = fetch_libraries("movie")
-    total_count, all_tmdb_ids = fetch_and_count_unplayed_titles(section_ids)
+    all_tmdb_ids = fetch_and_count_unplayed_titles(section_ids)
 
-    print(f"There are {total_count} movies eligible for deletion. TMDB IDs: {all_tmdb_ids}")
     total_size = 0
-    if not DRY_RUN:
-        for tmdb_id in all_tmdb_ids:
-            try:
-                size = find_and_delete_movie(tmdb_id)
-                if size is not None:
-                    total_size += size
-                find_and_delete_media(tmdb_id)
-            except Exception as ex:
-                print(f"Error: {ex}")
-                continue
-        find_and_update_library("movie")
-        refresh_library(section_ids, "movie")
-    else:
-        print("Dry run set to true. Skipping deletion process")
+    for tmdb_id in all_tmdb_ids:
+        try:
+            size = find_and_delete_movie(tmdb_id)
+            if size is not None:
+                total_size += size
+            find_and_delete_media(tmdb_id)
+        except Exception as ex:
+            print(f"Error: {ex}")
+            continue
+    find_and_update_library("movie")
+    refresh_library(section_ids, "movie")
 
-    print("Total freed up from movies: " + str(convert_bytes(total_size)))
+    return str(convert_bytes(total_size))
 
 
 def fetch_series():
@@ -59,26 +66,22 @@ def fetch_series():
     Fetches unplayed TV shows and deletes them if they are eligible for deletion.
     """
     section_ids = fetch_libraries("show")
-    total_count, all_tvdb_ids = fetch_and_count_unplayed_titles(section_ids)
+    all_tvdb_ids = fetch_and_count_unplayed_titles(section_ids)
 
-    print(f"There are {total_count} tv shows eligible for deletion. TVDB IDs: {all_tvdb_ids}")
     total_size = 0
-    if not DRY_RUN:
-        for tvdb_id in all_tvdb_ids:
-            try:
-                size = find_and_delete_series(tvdb_id)
-                if size is not None:
-                    total_size += size
-                find_and_delete_media(tvdb_id)
-            except Exception as ex:
-                print(f"Error: {ex}")
-                continue
-        find_and_update_library("show")
-        refresh_library(section_ids, "show")
-    else:
-        print("Dry run set to true. Skipping deletion process")
+    for tvdb_id in all_tvdb_ids:
+        try:
+            size = find_and_delete_series(tvdb_id)
+            if size is not None:
+                total_size += size
+            find_and_delete_media(tvdb_id)
+        except Exception as ex:
+            print(f"Error: {ex}")
+            continue
+    find_and_update_library("show")
+    refresh_library(section_ids, "show")
 
-    print("Total freed up from series: " + str(convert_bytes(total_size)))
+    return str(convert_bytes(total_size))
 
 
 # Run the job function immediately on first execution

@@ -1,6 +1,7 @@
 from plexapi.server import PlexServer
 from dotenv import load_dotenv
 import os
+import time
 
 load_dotenv()
 
@@ -50,5 +51,8 @@ def find_and_update_library(section_type):
 
     for section in sections:
         update_library(section)
+        while plex.library.sectionByID(section.key).refreshing:
+            print(f"PLEX :: Waiting for {section.title} to finish updating...")
+            time.sleep(1)
 
-    print(f"Updated {len(sections)} Plex {section_type} library.")
+    print(f"PLEX :: Updated {len(sections)} Plex {section_type} library")

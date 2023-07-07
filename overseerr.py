@@ -7,6 +7,7 @@ load_dotenv()
 API_KEY = os.getenv("OVERSEERR_API_KEY")
 BASE_URL = os.getenv("OVERSEERR_BASE_URL")
 
+DRY_RUN = os.getenv("DRY_RUN", "False").lower() in ("true", "1", "t")
 DEFAULT_FETCH_LIMIT = 10
 FETCH_LIMIT = int(os.getenv("OVERSEERR_FETCH_LIMIT"), DEFAULT_FETCH_LIMIT)
 
@@ -32,6 +33,7 @@ def fetch_overseerr_media():
             "take": FETCH_LIMIT,
             "skip": skip,
         }
+
         response = requests.get(url, headers=headers, params=params)
 
         if response.status_code != 200:
@@ -94,8 +96,12 @@ def delete_media(media_id):
     url = f"{BASE_URL}/media/{media_id}"
     headers = {"X-API-KEY": API_KEY}
 
+    if DRY_RUN:
+        print(f"OVERSEERR :: DRY RUN :: Would have deleted media {media_id}")
+        return
+
     response = requests.delete(url, headers=headers)
     if response.status_code == 204:
-        print(f"Media {media_id} deleted successfully.")
+        print(f"OVERSEERR :: Media {media_id} deleted successfully.")
     else:
         raise Exception(f"Deletion of media {media_id} failed with status code {response.status_code}")
