@@ -51,8 +51,10 @@ def find_and_update_library(section_type):
 
     for section in sections:
         update_library(section)
-        while plex.library.sectionByID(section.key).refreshing:
+        refreshing = plex.library.sectionByID(section.key).refreshing
+        while refreshing:
+            refreshing = plex.library.sectionByID(section.key).refreshing
             print(f"PLEX :: Waiting for {section.title} to finish updating...")
-            time.sleep(1)
+            time.sleep(5)
 
     print(f"PLEX :: Updated {len(sections)} Plex {section_type} library")
