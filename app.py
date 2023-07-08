@@ -23,11 +23,11 @@ def job():
     """
     print("JOB :: Starting")
 
-    # total_size = fetch_movies()
-    # if DRY_RUN:
-    #     print("JOB :: DRY RUN :: Would have freed up from movies: " + str(total_size))
-    # else:
-    #    print("JOB :: Total freed up from movies: " + str(total_size))
+    total_size = fetch_movies()
+    if DRY_RUN:
+        print("JOB :: DRY RUN :: Would have freed up from movies: " + str(total_size))
+    else:
+        print("JOB :: Total freed up from movies: " + str(total_size))
 
     total_size = fetch_series()
     if DRY_RUN:
