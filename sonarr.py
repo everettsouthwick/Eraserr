@@ -7,8 +7,35 @@ load_dotenv()
 
 API_KEY = os.getenv("SONARR_API_KEY")
 BASE_URL = os.getenv("SONARR_BASE_URL")
+EXEMPT_TAG_NAME = os.getenv("SONARR_EXEMPT_TAG_NAME")
 
 DRY_RUN = os.getenv("DRY_RUN", "False").lower() in ("true", "1", "t")
+
+
+def get_sonarr_tag_id(tag_name):
+    """
+    Retrieves the Sonarr tag ID given its name.
+
+    Args:
+        tag_name (str): The name of the tag.
+
+    Returns:
+        int: The ID of the tag.
+
+    Raises:
+        requests.exceptions.RequestException: If the request to retrieve the Sonarr tag ID fails.
+    """
+    url = f"{BASE_URL}/tag"
+    headers = {"X-Api-Key": API_KEY}
+
+    response = requests.get(url, headers=headers, timeout=30)
+    if response.status_code == 200:
+        tags = response.json()
+        for tag in tags:
+            if tag["label"] == tag_name:
+                return tag["id"]
+        return None
+    raise requests.exceptions.RequestException(f"Fetching Sonarr tag ID failed with status code {response.status_code}")
 
 
 def get_sonarr_item(tvdb_id):
@@ -22,21 +49,21 @@ def get_sonarr_item(tvdb_id):
         tuple: A tuple containing the Sonarr ID (int), title (str), and size on disk (int) of the TV series.
 
     Raises:
-        Exception: If the request to retrieve the Sonarr ID fails.
+        requests.exceptions.RequestException: If the request to retrieve the Sonarr ID fails.
     """
     url = f"{BASE_URL}/series"
     headers = {"X-Api-Key": API_KEY}
     params = {"tvdbId": tvdb_id}
 
-    response = requests.get(url, headers=headers, params=params)
+    response = requests.get(url, headers=headers, params=params, timeout=30)
     if response.status_code == 200:
         series = response.json()
         if not series:
             return None
-        else:
-            return series[0]
-    else:
-        raise Exception(f"Fetching Sonarr ID failed with status code {response.status_code}")
+
+        return series[0]
+
+    raise requests.exceptions.RequestException(f"Fetching Sonarr ID failed with status code {response.status_code}")
 
 
 def find_and_delete_series(tvdb_id):
@@ -47,27 +74,45 @@ def find_and_delete_series(tvdb_id):
         tvdb_id (int): The TVDB ID of the TV series.
 
     Returns:
-        int: The size of the disk space freed up by deleting the TV series.
+        Tuple[boolean, int]: A tuple containing whether the series was deleted or unmonitored and the size of the disk space freed up by deleting the TV series.
 
     Raises:
-        Exception: If the request to retrieve the Sonarr ID fails or if the deletion fails.
+        requests.exceptions.RequestException: If the request to retrieve the Sonarr ID fails or if the deletion fails.
     """
+    exempt_tag_id = get_sonarr_tag_id(EXEMPT_TAG_NAME)
     series = get_sonarr_item(tvdb_id)
 
     if series is None:
-        raise Exception("Fetching Sonarr ID failed")
+        raise requests.exceptions.RequestException("Fetching Sonarr ID failed")
 
+    title = series["title"]
     size_on_disk = series["statistics"]["sizeOnDisk"]
     ended = series["ended"]
+    tags = series["tags"]
 
+    if exempt_tag_id is not None and tags is not None and exempt_tag_id in tags:
+        print(f"SONARR :: {title} is exempt from deletion")
+        return False, 0
+
+    deleted = False
     if ended:
-        delete_unplayed_series(series)
+        deleted = delete_unplayed_series(series)
     else:
-        unmonitor_unplayed_series(series)
-        series = get_sonarr_item(tvdb_id)
-        size_on_disk = delete_unmonitored_episodes(series)
+        deleted = unmonitor_unplayed_series(series)
+        if deleted:
+            series = get_sonarr_item(tvdb_id)
+            has_unmonitored_episodes = True
+            for season in series["seasons"]:
+                if season["monitored"] is False and season["statistics"]["episodeFileCount"] > 0:
+                    has_unmonitored_episodes = True
+                    break
 
-    return size_on_disk
+                has_unmonitored_episodes = False
+
+            if has_unmonitored_episodes:
+                size_on_disk = delete_unmonitored_episodes(series)
+
+    return deleted, size_on_disk
 
 
 def delete_unplayed_series(series):
@@ -78,6 +123,9 @@ def delete_unplayed_series(series):
         sonarr_id (int): The Sonarr ID of the TV series.
         title (str): The title of the TV series.
         size_on_disk (int): The size on disk of the TV series.
+
+    Returns:
+        boolean: Whether the series was deleted.
 
     Raises:
         Exception: If the deletion fails.
@@ -92,16 +140,29 @@ def delete_unplayed_series(series):
 
     if DRY_RUN:
         print(f"SONARR :: DRY RUN :: {title} would be deleted. {convert_bytes(size_on_disk)} would be freed up")
-        return
+        return True
 
-    response = requests.delete(url, headers=headers, params=params)
+    response = requests.delete(url, headers=headers, params=params, timeout=30)
     if response.status_code == 200:
         print(f"SONARR :: {title} deleted successfully. {convert_bytes(size_on_disk)} freed up")
+        return True
     else:
-        raise Exception(f"Deletion failed with status code {response.status_code}")
+        raise requests.exceptions.RequestException(f"Deletion failed with status code {response.status_code}")
 
 
 def delete_unmonitored_episodes(series):
+    """
+    Deletes unmonitored episodes of a TV series in Sonarr by its Sonarr ID.
+
+    Args:
+        series (dict): A dictionary containing information about the TV series.
+
+    Returns:
+        int: The total size on disk of the deleted episodes.
+
+    Raises:
+        requests.exceptions.RequestException: If the deletion fails.
+    """
     unmonitored_seasons = []
     for season in series["seasons"]:
         if not season["monitored"]:
@@ -119,7 +180,7 @@ def delete_unmonitored_episodes(series):
     if response.status_code == 200:
         episodes = response.json()
         if not episodes:
-            raise Exception("Fetching Sonarr episodes failed")
+            raise requests.exceptions.RequestException("Fetching Sonarr episodes failed")
 
         for episode in episodes:
             if episode["seasonNumber"] not in unmonitored_seasons:
@@ -135,14 +196,14 @@ def delete_unmonitored_episodes(series):
 
             url = f"{BASE_URL}/episodefile/{episode['id']}"
 
-            response = requests.delete(url, headers=headers)
+            response = requests.delete(url, headers=headers, timeout=30)
             if response.status_code == 200:
                 size_on_disk += episode["size"]
                 episodes_deleted_count += 1
             else:
-                raise Exception(f"Deletion failed with status code {response.status_code}")
+                raise requests.exceptions.RequestException(f"Deletion failed with status code {response.status_code}")
     else:
-        raise Exception(f"Fetching episodes failed with status code {response.status_code}")
+        raise requests.exceptions.RequestException(f"Fetching episodes failed with status code {response.status_code}")
 
     if DRY_RUN:
         print(
@@ -165,8 +226,11 @@ def unmonitor_unplayed_series(series):
         title (str): The title of the TV series.
         size_on_disk (int): The size on disk of the TV series.
 
+    Returns:
+        boolean: Whether the series was unmonitored.
+
     Raises:
-        Exception: If the unmonitoring fails.
+        requests.exceptions.RequestException: If the unmonitoring fails.
     """
     url = f"{BASE_URL}/seasonpass"
     headers = {"X-Api-Key": API_KEY}
@@ -179,10 +243,11 @@ def unmonitor_unplayed_series(series):
 
     if DRY_RUN:
         print(f"SONARR :: DRY RUN :: {title} would be unmonitored")
-        return
+        return True
 
-    response = requests.post(url, headers=headers, json=body)
+    response = requests.post(url, headers=headers, json=body, timeout=30)
     if response.status_code == 202:
         print(f"SONARR :: {title} unmonitored successfully")
-    else:
-        raise Exception(f"Unmonitoring failed with status code {response.status_code}")
+        return True
+
+    raise requests.exceptions.RequestException(f"Unmonitoring failed with status code {response.status_code}")
