@@ -56,15 +56,15 @@ docker pull ecsouthwick/eraserr:develop
 Once you have pulled the image from docker, you may use the following command to run the container:
 
 ```shell
-docker run -d --name eraserr --volume /path/to/.env:/app/.env ecsouthwick/eraserr
+docker run -d --name eraserr --volume /path/to/config.json:/app/config.json ecsouthwick/eraserr
 ```
 
 **Note**: The recommended restart policy for the container is `on-failure` or `no`.
 
 ## Configuration
 
-1. Copy `.env.example` to `.env`. 
-2. See [CONFIGURATION.md](CONFIGURATION.md) for detailed instructions on setting up `.env`.
+1. Copy `config.example.json` to `config.json`. 
+2. See [CONFIGURATION.md](CONFIGURATION.md) for detailed instructions on setting up `config.json`.
 
 [0]: https://www.python.org/downloads/ "Python 3.7+"
 [1]: https://pip.pypa.io/en/stable/installation/ "Pip"
