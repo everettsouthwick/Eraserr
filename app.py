@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from util import convert_bytes
 import schedule
 import time
+import requests
 
 
 load_dotenv()
@@ -48,11 +49,11 @@ def fetch_movies():
     total_size = 0
     for tmdb_id in all_tmdb_ids:
         try:
-            size = find_and_delete_movie(tmdb_id)
-            if size is not None:
+            deleted, size = find_and_delete_movie(tmdb_id)
+            if deleted and size is not None:
                 total_size += size
-            find_and_delete_media(tmdb_id)
-        except Exception as ex:
+                find_and_delete_media(tmdb_id)
+        except requests.exceptions.RequestException as ex:
             print(f"Error: {ex}")
             continue
     find_and_update_library("movie")
@@ -71,11 +72,11 @@ def fetch_series():
     total_size = 0
     for tvdb_id in all_tvdb_ids:
         try:
-            size = find_and_delete_series(tvdb_id)
-            if size is not None:
+            deleted, size = find_and_delete_series(tvdb_id)
+            if deleted and size is not None:
                 total_size += size
-            find_and_delete_media(tvdb_id)
-        except Exception as ex:
+                find_and_delete_media(tvdb_id)
+        except requests.exceptions.RequestException as ex:
             print(f"Error: {ex}")
             continue
     find_and_update_library("show")

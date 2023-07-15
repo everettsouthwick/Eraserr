@@ -8,8 +8,8 @@ API_KEY = os.getenv("OVERSEERR_API_KEY")
 BASE_URL = os.getenv("OVERSEERR_BASE_URL")
 
 DRY_RUN = os.getenv("DRY_RUN", "False").lower() in ("true", "1", "t")
-DEFAULT_FETCH_LIMIT = 10
-FETCH_LIMIT = int(os.getenv("OVERSEERR_FETCH_LIMIT"), DEFAULT_FETCH_LIMIT)
+DEFAULT_FETCH_LIMIT = "10"
+FETCH_LIMIT = int(os.getenv("OVERSEERR_FETCH_LIMIT", DEFAULT_FETCH_LIMIT))
 
 
 def fetch_overseerr_media():
