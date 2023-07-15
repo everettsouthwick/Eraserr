@@ -6,3 +6,5 @@ def convert_bytes(num):
         if num < 1024.0:
             return f"{num:3.1f} {unit}"
         num /= 1024.0
+
+    return f"{num:3.1f}"
