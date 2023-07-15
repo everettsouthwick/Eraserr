@@ -1,0 +1,36 @@
+{
+    "tautulli": {
+        "api_key": "",
+        "base_url": "http://host:port/api/v2",
+        "fetch_limit": 25
+    },
+    "radarr": {
+        "api_key": "",
+        "base_url": "http://host:port/api/v3",
+        "exempt_tag_names": [
+            "exempt-from-auto-delete",
+            "some-other-tag"
+        ]
+    },
+    "sonarr": {
+        "api_key": "",
+        "base_url": "http://host:port/api/v3",
+        "monitor_continuing_series": true,
+        "exempt_tag_names": [
+            "exempt-from-auto-delete",
+            "some-other-tag"
+        ]
+    },
+    "overseerr": {
+        "api_key": "",
+        "base_url": "http://host:port/api/v1",
+        "fetch_limit": 10
+    },
+    "plex": {
+        "base_url": "http://host.port",
+        "token": ""
+    },
+    "days_threshold": 30,
+    "dry_run": true,
+    "schedule_interval": 86400
+}
