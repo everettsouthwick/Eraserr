@@ -117,7 +117,8 @@ Set the number of results to fetch from Overseerr by replacing the `fetch_limit`
 ```json
 "plex": {
     "base_url": "http://host.port",
-    "token": ""
+    "token": "",
+    "refresh": true
 }
 ```
 
@@ -126,6 +127,9 @@ Update the `base_url` with your Plex base URL.
 
 ### Plex Token
 Replace the empty `token` value with your Plex token.
+
+### Plex Refresh
+Set to `true` to refresh your Plex library. The program will refresh your Plex library after completion. Set to `false` to disable refreshing your Plex library. Update the `refresh` value as per your requirements.
 
 ## Days Threshold
 

@@ -39,6 +39,7 @@ class OverseerrConfig:
 class PlexConfig:
     base_url: str
     token: str
+    refresh: bool
 
 
 @dataclass
@@ -58,7 +59,7 @@ class Config:
         self.radarr = RadarrConfig("", "http://host:port/api/v3", [])
         self.sonarr = SonarrConfig("", "http://host:port/api/v3", True, [])
         self.overseerr = OverseerrConfig("", "http://host:port/api/v1", 10)
-        self.plex = PlexConfig("http://host:port", "")
+        self.plex = PlexConfig("http://host:port", "", True)
         self.days_threshold = 30
         self.dry_run = True
         self.schedule_interval = 86400
