@@ -1,5 +1,5 @@
 # Configuration
-This guide contains all the information you need to configure `Eraserr` using an `.env` file. An example file of the configuration can be found at [.env.example](.env.example).
+This guide contains all the information you need to configure `Eraserr` using a `config.json` file. An example file of the configuration can be found at [config.json.example](config.example.json).
 
 ## Table of Contents
 - [Tautulli](#tautulli)
@@ -9,86 +9,148 @@ This guide contains all the information you need to configure `Eraserr` using an
 - [Radarr](#radarr)
   - [API Key](#radarr-api-key)
   - [Base URL](#radarr-base-url)
+  - [Exempt Tag Names](#radarr-exempt-tag-names)
 - [Sonarr](#sonarr)
   - [API Key](#sonarr-api-key)
   - [Base URL](#sonarr-base-url)
+  - [Monitor Continuing Series](#sonarr-monitor-continuing-series)
+  - [Exempt Tag Names](#sonarr-exempt-tag-names)
 - [Overseerr](#overseerr)
   - [API Key](#overseerr-api-key)
   - [Base URL](#overseerr-base-url)
   - [Fetch Limit](#overseerr-fetch-limit)
+- [Plex](#plex)
+  - [Base URL](#plex-base-url)
+  - [Token](#plex-token)
 - [Days Threshold](#days-threshold)
 - [Dry Run](#dry-run)
 - [Schedule Interval](#schedule-interval)
 
 ## Tautulli
 
-### Tautulli API Key
-`TAUTULLI_API_KEY=your_api_key_here`
+```json
+"tautulli": {
+    "api_key": "",
+    "base_url": "http://host:port/api/v2",
+    "fetch_limit": 25
+}
+```
 
-Enter your Tautulli API Key here.
+### Tautulli API Key
+Replace the empty `api_key` value with your Tautulli API Key.
 
 ### Tautulli Base URL
-`TAUTULLI_BASE_URL=http://host:port/api/v2`
-
-Enter your Tautulli base URL here.
+Update the `base_url` with your Tautulli base URL.
 
 ### Tautulli Fetch Limit
-`TAUTULLI_FETCH_LIMIT=25`
-
-Set the number of results to fetch from Tautulli.
+Set the number of results to fetch from Tautulli by replacing the `fetch_limit` value.
 
 ## Radarr
 
-### Radarr API Key
-`RADARR_API_KEY=your_api_key_here`
+```json
+"radarr": {
+    "api_key": "",
+    "base_url": "http://host:port/api/v3",
+    "exempt_tag_names": [
+        "exempt-from-auto-delete",
+        "some-other-tag"
+    ]
+}
+```
 
-Enter your Radarr API Key here.
+### Radarr API Key
+Replace the empty `api_key` value with your Radarr API Key.
 
 ### Radarr Base URL
-`RADARR_BASE_URL=http://host:port/api/v3`
+Update the `base_url` with your Radarr base URL.
 
-Enter your Radarr base URL here.
+### Radarr Exempt Tag Names
+Set tag names to exempt from automatic deletion by updating the `exempt_tag_names` array.
 
 ## Sonarr
 
-### Sonarr API Key
-`SONARR_API_KEY=your_api_key_here`
+```json
+"sonarr": {
+    "api_key": "",
+    "base_url": "http://host:port/api/v3",
+    "monitor_continuing_series": true,
+    "exempt_tag_names": [
+        "exempt-from-auto-delete",
+        "some-other-tag"
+    ]
+}
+```
 
-Enter your Sonarr API Key here.
+### Sonarr API Key
+Replace the empty `api_key` value with your Sonarr API Key.
 
 ### Sonarr Base URL
-`SONARR_BASE_URL=http://host:port/api/v3`
+Update the `base_url` with your Sonarr base URL.
 
-Enter your Sonarr base URL here.
+### Sonarr Monitor Continuing Series
+Set to `true` if you want to monitor continuing series instead of deleting it from Sonarr so that new seasons are fetched.
+
+### Sonarr Exempt Tag Names
+Set tag names to exempt from automatic deletion by updating the `exempt_tag_names` array.
 
 ## Overseerr
 
-### Overseerr API Key
-`OVERSEERR_API_KEY=your_api_key_here`
+```json
+"overseerr": {
+    "api_key": "",
+    "base_url": "http://host:port/api/v1",
+    "fetch_limit": 10
+}
+```
 
-Enter your Overseerr API Key here.
+### Overseerr API Key
+Replace the empty `api_key` value with your Overseerr API Key.
 
 ### Overseerr Base URL
-`OVERSEERR_BASE_URL=http://host:port/api/v1`
-
-Enter your Overseerr base URL here.
+Update the `base_url` with your Overseerr base URL.
 
 ### Overseerr Fetch Limit
-`OVERSEERR_FETCH_LIMIT=10`
+Set the number of results to fetch from Overseerr by replacing the `fetch_limit` value.
 
-Set the number of results to fetch from Overseerr.
+## Plex
+
+```json
+"plex": {
+    "base_url": "http://host.port",
+    "token": "",
+    "refresh": true
+}
+```
+
+### Plex Base URL
+Update the `base_url` with your Plex base URL.
+
+### Plex Token
+Replace the empty `token` value with your Plex token.
+
+### Plex Refresh
+Set to `true` to refresh your Plex library. The program will refresh your Plex library after completion. Set to `false` to disable refreshing your Plex library. Update the `refresh` value as per your requirements.
 
 ## Days Threshold
-`DAYS_THRESHOLD=30`
 
-Set the days threshold for media deletion. Any media not watched in the past given number of days will be considered stale and flagged for deletion.
+```json
+"days_threshold": 30
+```
+
+Set the days threshold for media deletion. Any media not watched in the past given number of days will be considered stale and flagged for deletion. Replace `days_threshold` with the desired value.
 
 ## Dry Run
-`DRY_RUN=True`
 
-Set to `True` for dry run. The program will log the actions it would take without making changes. Set to `False` to enable live mode where changes will be made.
+```json
+"dry_run": true
+```
+
+Set to `true` for dry run. The program will log the actions it would take without making changes. Set to `false` to enable live mode where changes will be made. Update the `dry_run` value as per your requirements.
 
 ## Schedule Interval
-`SCHEDULE_INTERVAL=86400`
 
-Set the interval (in seconds) at which the script runs.
+```json
+"schedule_interval": 86400
+```
+
+Set the interval (in seconds) at which the script runs by replacing the `schedule_interval` value.

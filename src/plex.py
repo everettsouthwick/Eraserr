@@ -7,6 +7,7 @@ class PlexClient:
         self.config = config
         self.base_url = config.plex.base_url
         self.token = config.plex.token
+        self.refresh = config.plex.refresh
         self.plex = PlexServer(self.base_url, self.token)
 
     def get_sections(self, section_type):
