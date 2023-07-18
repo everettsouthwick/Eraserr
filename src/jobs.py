@@ -66,7 +66,10 @@ class JobRunner:
             except requests.exceptions.RequestException as ex:
                 print(f"Error: {ex}")
                 continue
-        self.plex.find_and_update_library("movie")
+        if self.config.plex.refresh:
+            self.plex.find_and_update_library("movie")
+        else:
+            print("PLEX :: Skipping Plex library refresh")
         self.tautulli.refresh_library(section_ids, "movie")
 
         return str(convert_bytes(total_size))
@@ -88,7 +91,10 @@ class JobRunner:
             except requests.exceptions.RequestException as ex:
                 print(f"Error: {ex}")
                 continue
-        self.plex.find_and_update_library("show")
+        if self.config.plex.refresh:
+            self.plex.find_and_update_library("show")
+        else:
+            print("PLEX :: Skipping Plex library refresh")
         self.tautulli.refresh_library(section_ids, "show")
 
         return str(convert_bytes(total_size))

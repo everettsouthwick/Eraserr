@@ -28,7 +28,8 @@
     },
     "plex": {
         "base_url": "http://host.port",
-        "token": ""
+        "token": "",
+        "refresh": true
     },
     "days_threshold": 30,
     "dry_run": true,
