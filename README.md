@@ -36,7 +36,7 @@ pip install -r requirements.txt
 
 To use the script, run the following command:
 ```shell
-python eraser.py
+python eraserr.py
 ```
 
 ### Docker
