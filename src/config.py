@@ -101,24 +101,48 @@ class Config:
             config: A dictionary containing the configuration values.
 
         Raises:
+            KeyError: If any required configuration keys are missing.
             TypeError: If any of the configuration values are of the wrong type.
             ValueError: If any of the configuration values are invalid.
         """
-        if "tautulli" in config:
+        # List of required configuration keys
+        required_keys = [
+            "tautulli",
+            "radarr",
+            "sonarr",
+            "overseerr",
+            "plex",
+            "last_watched_days_deletion_threshold",
+            "unwatched_days_deletion_threshold",
+            "dry_run",
+            "schedule_interval",
+        ]
+
+        # Check for missing keys
+        for key in required_keys:
+            if key not in config:
+                raise KeyError(f"Missing required configuration key: {key}")
+
+        # Parse and validate configuration values
+        try:
             self.tautulli = TautulliConfig(**config["tautulli"])
-        if "radarr" in config:
             self.radarr = RadarrConfig(**config["radarr"])
-        if "sonarr" in config:
             self.sonarr = SonarrConfig(**config["sonarr"])
-        if "overseerr" in config:
             self.overseerr = OverseerrConfig(**config["overseerr"])
-        if "plex" in config:
             self.plex = PlexConfig(**config["plex"])
-        if "last_watched_days_deletion_threshold" in config:
             self.last_watched_days_deletion_threshold = config["last_watched_days_deletion_threshold"]
-        if "unwatched_days_deletion_threshold" in config:
             self.unwatched_days_deletion_threshold = config["unwatched_days_deletion_threshold"]
-        if "dry_run" in config:
             self.dry_run = config["dry_run"] in [True, "True", "true", "1"]
-        if "schedule_interval" in config:
             self.schedule_interval = config["schedule_interval"]
+        except KeyError as err:
+            print("Error in configuration file:")
+            print(err)
+            sys.exit()
+        except TypeError as err:
+            print("Error in configuration file:")
+            print(err)
+            sys.exit()
+        except ValueError as err:
+            print("Error in configuration file:")
+            print(err)
+            sys.exit()
