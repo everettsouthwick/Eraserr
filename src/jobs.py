@@ -67,6 +67,7 @@ class JobRunner:
                 print(f"Error: {ex}")
                 continue
         if self.config.plex.refresh:
+            time.sleep(10)
             self.plex.find_and_update_library("movie")
         else:
             print("PLEX :: Skipping Plex library refresh")
@@ -92,6 +93,7 @@ class JobRunner:
                 print(f"Error: {ex}")
                 continue
         if self.config.plex.refresh:
+            time.sleep(10)
             self.plex.find_and_update_library("show")
         else:
             print("PLEX :: Skipping Plex library refresh")

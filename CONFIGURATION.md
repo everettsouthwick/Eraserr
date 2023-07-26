@@ -131,13 +131,21 @@ Replace the empty `token` value with your Plex token.
 ### Plex Refresh
 Set to `true` to refresh your Plex library. The program will refresh your Plex library after completion. Set to `false` to disable refreshing your Plex library. Update the `refresh` value as per your requirements.
 
-## Days Threshold
+## Last Watched Days Deletion Threshold
 
 ```json
-"days_threshold": 30
+"last_watched_days_deletion_threshold": 90
 ```
 
-Set the days threshold for media deletion. Any media not watched in the past given number of days will be considered stale and flagged for deletion. Replace `days_threshold` with the desired value.
+Set the days threshold for media deletion. Any media last watched in the past given number of days will be considered stale and flagged for deletion. Replace `last_watched_days_deletion_threshold` with the desired value.
+
+## Unwatched Days Deletion Threshold
+
+```json
+"unwatched_days_deletion_threshold": 30
+```
+
+Set the days threshold for media deletion. Any media that has never been watched in the past given number of days will be considered stale and flagged for deletion. Replace `unwatched_days_deletion_threshold` with the desired value.
 
 ## Dry Run
 
