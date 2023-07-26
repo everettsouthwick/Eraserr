@@ -49,8 +49,8 @@ class PlexClient:
         for section in sections:
             self.update_library(section)
             refreshing = self.plex.library.sectionByID(section.key).refreshing
-            sleep_time = 5
-            max_refresh_time = 300
+            sleep_time = 30
+            max_refresh_time = 600
 
             while refreshing and max_refresh_time > 0:
                 refreshing = self.plex.library.sectionByID(section.key).refreshing
