@@ -22,7 +22,8 @@ This guide contains all the information you need to configure `Eraserr` using a 
 - [Plex](#plex)
   - [Base URL](#plex-base-url)
   - [Token](#plex-token)
-- [Days Threshold](#days-threshold)
+- [Last Watched Days Deletion Threshold](#last-watched-days-deletion-threshold)
+- [Unwatched Days Deletion Threshold](#unwatched-days-deletion-threshold)
 - [Dry Run](#dry-run)
 - [Schedule Interval](#schedule-interval)
 
