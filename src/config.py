@@ -49,7 +49,8 @@ class Config:
     sonarr: SonarrConfig
     overseerr: OverseerrConfig
     plex: PlexConfig
-    days_threshold: int
+    last_watched_days_deletion_threshold: int
+    unwatched_days_deletion_threshold: int
     dry_run: bool
     schedule_interval: int
 
@@ -60,7 +61,8 @@ class Config:
         self.sonarr = SonarrConfig("", "http://host:port/api/v3", True, [])
         self.overseerr = OverseerrConfig("", "http://host:port/api/v1", 10)
         self.plex = PlexConfig("http://host:port", "", True)
-        self.days_threshold = 30
+        self.last_watched_days_deletion_threshold = 90
+        self.unwatched_days_deletion_threshold = 30
         self.dry_run = True
         self.schedule_interval = 86400
 
@@ -112,8 +114,10 @@ class Config:
             self.overseerr = OverseerrConfig(**config["overseerr"])
         if "plex" in config:
             self.plex = PlexConfig(**config["plex"])
-        if "days_threshold" in config:
-            self.days_threshold = config["days_threshold"]
+        if "last_watched_days_deletion_threshold" in config:
+            self.last_watched_days_deletion_threshold = config["last_watched_days_deletion_threshold"]
+        if "unwatched_days_deletion_threshold" in config:
+            self.unwatched_days_deletion_threshold = config["unwatched_days_deletion_threshold"]
         if "dry_run" in config:
             self.dry_run = config["dry_run"] in [True, "True", "true", "1"]
         if "schedule_interval" in config:

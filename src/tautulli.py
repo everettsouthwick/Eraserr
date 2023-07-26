@@ -1,5 +1,6 @@
 import requests
 import time
+from datetime import datetime
 
 
 class TautulliClient:
@@ -8,7 +9,8 @@ class TautulliClient:
         self.api_key = config.tautulli.api_key
         self.base_url = config.tautulli.base_url
         self.fetch_limit = config.tautulli.fetch_limit
-        self.days_threshold = config.days_threshold
+        self.last_watched_days_deletion_threshold = config.last_watched_days_deletion_threshold
+        self.unwatched_days_deletion_threshold = config.unwatched_days_deletion_threshold
 
     def fetch_libraries(self, section_type):
         params = {"apikey": self.api_key, "cmd": "get_libraries"}
@@ -119,7 +121,8 @@ class TautulliClient:
         """
         count = 0
         item_ids = []
-        threshold_timestamp = time.time() - self.days_threshold * 24 * 60 * 60
+        last_watched_threshold_timestamp = time.time() - self.last_watched_days_deletion_threshold * 24 * 60 * 60
+        unwatched_threshold_timestamp = time.time() - self.unwatched_days_deletion_threshold * 24 * 60 * 60
         start = 0
         max_executions_allowed = 1000
         is_first_loop = True
@@ -155,10 +158,12 @@ class TautulliClient:
                 item_id = self.fetch_metadata(rating_key)
 
                 if item_id is not None:
-                    if item["last_played"] is None and int(item["added_at"]) < threshold_timestamp:
+                    if item["last_played"] is None and int(item["added_at"]) < unwatched_threshold_timestamp:
                         count += 1
                         item_ids.append(item_id)
-                    elif item["last_played"] is not None and int(item["last_played"]) < threshold_timestamp:
+                    elif (
+                        item["last_played"] is not None and int(item["last_played"]) < last_watched_threshold_timestamp
+                    ):
                         count += 1
                         item_ids.append(item_id)
 
