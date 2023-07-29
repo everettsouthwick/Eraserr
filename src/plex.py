@@ -1,14 +1,80 @@
-from plexapi.server import PlexServer
+"""Module for interacting with Plex."""
 import time
+from plexapi.server import PlexServer
+from src.models.plex.plexmovie import PlexMovie
+from src.models.plex.plexseries import PlexSeries
 
 
 class PlexClient:
+    """Client for interacting with Plex."""
+
     def __init__(self, config):
         self.config = config
         self.base_url = config.plex.base_url
         self.token = config.plex.token
         self.refresh = config.plex.refresh
         self.plex = PlexServer(self.base_url, self.token)
+
+    def get_movies(self, section_type="movie"):
+        """
+        Retrieves a list of movies from the specified section type.
+
+        Args:
+            section_type (str): The type of section to retrieve movies from.
+
+        Returns:
+            List[PlexMovie]: A list of PlexMovie objects representing the movies in the specified section.
+        """
+        movie_list = []
+
+        sections = self.get_sections(section_type)
+        for section in sections:
+            for movie in section.all():
+                history = self.plex._server.history(ratingKey=movie.ratingKey)
+                last_watched_date = max(entry.viewedAt for entry in history) if history else None
+
+                tmdbid = None
+                for guid in movie.guids:
+                    if guid.id.startswith("tmdb://"):
+                        tmdbid = guid.id.split("tmdb://")[1].split("?")[0]
+                        break
+
+                # Create Movie object and append to list
+                movie_obj = PlexMovie(movie.title, movie.addedAt, last_watched_date, tmdbid)
+                movie_list.append(movie_obj)
+
+        return movie_list
+
+    def get_series(self, section_type="show"):
+        """
+        Retrieves a list of TV series from the specified section type.
+
+        Args:
+            section_type (str): The type of section to retrieve TV series from.
+
+        Returns:
+            List[PlexSeries]: A list of PlexSeries objects representing the TV series in the specified section.
+        """
+        series_list = []
+
+        sections = self.get_sections(section_type)
+        for section in sections:
+            for series in section.all():
+                added_at = series.addedAt
+                added_at = max(episode.addedAt for episode in series.episodes())
+                history = self.plex._server.history(ratingKey=series.ratingKey)
+                last_watched_date = max(entry.viewedAt for entry in history) if history else None
+
+                tvdbid = None
+                for guid in series.guids:
+                    if guid.id.startswith("tvdb://"):
+                        tvdbid = guid.id.split("tvdb://")[1].split("?")[0]
+                        break
+
+                series_obj = PlexSeries(series.title, added_at, last_watched_date, tvdbid)
+                series_list.append(series_obj)
+
+        return series_list
 
     def get_sections(self, section_type):
         """

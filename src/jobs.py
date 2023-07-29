@@ -5,7 +5,6 @@ from src.overseerr import OverseerrClient
 from src.plex import PlexClient
 from src.radarr import RadarrClient
 from src.sonarr import SonarrClient
-from src.tautulli import TautulliClient
 from src.util import convert_bytes
 
 
@@ -16,7 +15,6 @@ class JobRunner:
         self.plex = PlexClient(config)
         self.radarr = RadarrClient(config)
         self.sonarr = SonarrClient(config)
-        self.tautulli = TautulliClient(config)
 
     def run(self):
         # Run the job function immediately on first execution
@@ -53,8 +51,8 @@ class JobRunner:
         """
         Fetches unplayed movies and deletes them if they are eligible for deletion.
         """
-        section_ids = self.tautulli.fetch_libraries("movie")
-        all_tmdb_ids = self.tautulli.fetch_and_count_unplayed_titles(section_ids)
+        movies = self.plex.get_movies()
+        all_tmdb_ids = [movie["tmdbId"] for movie in movies]
 
         total_size = 0
         for tmdb_id in all_tmdb_ids:
@@ -71,7 +69,7 @@ class JobRunner:
             self.plex.find_and_update_library("movie")
         else:
             print("PLEX :: Skipping Plex library refresh")
-        self.tautulli.refresh_library(section_ids, "movie")
+        # self.tautulli.refresh_library(section_ids, "movie")
 
         return str(convert_bytes(total_size))
 
@@ -79,8 +77,8 @@ class JobRunner:
         """
         Fetches unplayed TV shows and deletes them if they are eligible for deletion.
         """
-        section_ids = self.tautulli.fetch_libraries("show")
-        all_tvdb_ids = self.tautulli.fetch_and_count_unplayed_titles(section_ids)
+        series = self.plex.get_series()
+        all_tvdb_ids = [show["tvdbId"] for show in series]
 
         total_size = 0
         for tvdb_id in all_tvdb_ids:
@@ -97,6 +95,6 @@ class JobRunner:
             self.plex.find_and_update_library("show")
         else:
             print("PLEX :: Skipping Plex library refresh")
-        self.tautulli.refresh_library(section_ids, "show")
+        # self.tautulli.refresh_library(section_ids, "show")
 
         return str(convert_bytes(total_size))

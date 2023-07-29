@@ -7,13 +7,6 @@ CONFIG_FILE_NAME = "config.json"
 
 
 @dataclass
-class TautulliConfig:
-    api_key: str
-    base_url: str
-    fetch_limit: int
-
-
-@dataclass
 class RadarrConfig:
     api_key: str
     base_url: str
@@ -44,7 +37,6 @@ class PlexConfig:
 
 @dataclass
 class Config:
-    tautulli: TautulliConfig
     radarr: RadarrConfig
     sonarr: SonarrConfig
     overseerr: OverseerrConfig
@@ -56,7 +48,6 @@ class Config:
 
     def __init__(self):
         # Default values are set
-        self.tautulli = TautulliConfig("", "http://host:port/api/v2", 25)
         self.radarr = RadarrConfig("", "http://host:port/api/v3", [])
         self.sonarr = SonarrConfig("", "http://host:port/api/v3", True, [])
         self.overseerr = OverseerrConfig("", "http://host:port/api/v1", 10)
@@ -125,7 +116,6 @@ class Config:
 
         # Parse and validate configuration values
         try:
-            self.tautulli = TautulliConfig(**config["tautulli"])
             self.radarr = RadarrConfig(**config["radarr"])
             self.sonarr = SonarrConfig(**config["sonarr"])
             self.overseerr = OverseerrConfig(**config["overseerr"])
