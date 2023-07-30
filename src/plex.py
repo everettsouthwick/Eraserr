@@ -1,4 +1,5 @@
 """Module for interacting with Plex."""
+import os
 import time
 from plexapi.server import PlexServer
 from src.models.plex.plexmovie import PlexMovie
@@ -30,17 +31,30 @@ class PlexClient:
         sections = self.get_sections(section_type)
         for section in sections:
             for movie in section.all():
+                tmdb_id = next(
+                    (
+                        guid.id.split("tmdb://")[1].split("?")[0]
+                        for guid in movie.guids
+                        if guid.id.startswith("tmdb://")
+                    ),
+                    None,
+                )
+                imdb_db = next(
+                    (
+                        guid.id.split("imdb://")[1].split("?")[0]
+                        for guid in movie.guids
+                        if guid.id.startswith("imdb://")
+                    ),
+                    None,
+                )
+                path = movie.media[0].parts[0].file
+                if path:
+                    path = os.path.dirname(path)
                 history = self.plex._server.history(ratingKey=movie.ratingKey)
                 last_watched_date = max(entry.viewedAt for entry in history) if history else None
 
-                tmdbid = None
-                for guid in movie.guids:
-                    if guid.id.startswith("tmdb://"):
-                        tmdbid = guid.id.split("tmdb://")[1].split("?")[0]
-                        break
-
                 # Create Movie object and append to list
-                movie_obj = PlexMovie(movie.title, movie.addedAt, last_watched_date, tmdbid)
+                movie_obj = PlexMovie(tmdb_id, imdb_db, path, movie.title, movie.addedAt, last_watched_date)
                 movie_list.append(movie_obj)
 
         return movie_list
@@ -60,18 +74,34 @@ class PlexClient:
         sections = self.get_sections(section_type)
         for section in sections:
             for series in section.all():
-                added_at = series.addedAt
+                tvdb_id = next(
+                    (
+                        guid.id.split("tvdb://")[1].split("?")[0]
+                        for guid in series.guids
+                        if guid.id.startswith("tvdb://")
+                    ),
+                    None,
+                )
+                imdb_db = next(
+                    (
+                        guid.id.split("imdb://")[1].split("?")[0]
+                        for guid in series.guids
+                        if guid.id.startswith("imdb://")
+                    ),
+                    None,
+                )
+                path = series.episodes()[0].media[0].parts[0].file
+
+                if path:
+                    # Get the season directory
+                    path = os.path.dirname(path)
+                    # Get the series directory
+                    path = os.path.dirname(path)
                 added_at = max(episode.addedAt for episode in series.episodes())
                 history = self.plex._server.history(ratingKey=series.ratingKey)
                 last_watched_date = max(entry.viewedAt for entry in history) if history else None
 
-                tvdbid = None
-                for guid in series.guids:
-                    if guid.id.startswith("tvdb://"):
-                        tvdbid = guid.id.split("tvdb://")[1].split("?")[0]
-                        break
-
-                series_obj = PlexSeries(series.title, added_at, last_watched_date, tvdbid)
+                series_obj = PlexSeries(tvdb_id, imdb_db, path, series.title, added_at, last_watched_date)
                 series_list.append(series_obj)
 
         return series_list

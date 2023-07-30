@@ -1,11 +1,14 @@
 import time
 import schedule
 import requests
+from datetime import datetime
 from src.overseerr import OverseerrClient
 from src.plex import PlexClient
 from src.radarr import RadarrClient
 from src.sonarr import SonarrClient
 from src.util import convert_bytes
+from src.models.plex.plexmovie import PlexMovie
+from src.models.plex.plexseries import PlexSeries
 
 
 class JobRunner:
@@ -47,12 +50,66 @@ class JobRunner:
 
         print("JOB :: Finished")
 
+    def should_delete_movie(self, item: PlexMovie):
+        last_watched_threshold = datetime.fromtimestamp(
+            time.time() - self.config.last_watched_days_deletion_threshold * 24 * 60 * 60
+        )
+        unwatched_threshold = datetime.fromtimestamp(
+            time.time() - self.config.unwatched_days_deletion_threshold * 24 * 60 * 60
+        )
+
+        if item.tmdb_id is None:
+            return False
+
+        if item.unwatched and item.added_at is not None and item.added_at < unwatched_threshold:
+            return True
+
+        if (
+            not item.unwatched
+            and item.added_at is not None
+            and item.last_watched_date is not None
+            and item.added_at < last_watched_threshold
+            and item.last_watched_date < last_watched_threshold
+        ):
+            return True
+
+        return False
+
+    def should_delete_series(self, item: PlexSeries):
+        last_watched_threshold = datetime.fromtimestamp(
+            time.time() - self.config.last_watched_days_deletion_threshold * 24 * 60 * 60
+        )
+        unwatched_threshold = datetime.fromtimestamp(
+            time.time() - self.config.unwatched_days_deletion_threshold * 24 * 60 * 60
+        )
+
+        if item.tvdb_id is None:
+            return False
+
+        if item.unwatched and item.added_at is not None and item.added_at < unwatched_threshold:
+            return True
+
+        if (
+            not item.unwatched
+            and item.added_at is not None
+            and item.last_watched_date is not None
+            and item.added_at < last_watched_threshold
+            and item.last_watched_date < last_watched_threshold
+        ):
+            return True
+
+        return False
+
     def fetch_movies(self):
         """
         Fetches unplayed movies and deletes them if they are eligible for deletion.
         """
+        all_tmdb_ids = []
+
         movies = self.plex.get_movies()
-        all_tmdb_ids = [movie["tmdbId"] for movie in movies]
+        for movie in movies:
+            if self.should_delete_movie(movie):
+                all_tmdb_ids.append(movie.tmdb_id)
 
         total_size = 0
         for tmdb_id in all_tmdb_ids:
@@ -77,8 +134,12 @@ class JobRunner:
         """
         Fetches unplayed TV shows and deletes them if they are eligible for deletion.
         """
+        all_tvdb_ids = []
+
         series = self.plex.get_series()
-        all_tvdb_ids = [show["tvdbId"] for show in series]
+        for show in series:
+            if self.should_delete_series(show):
+                all_tvdb_ids.append(show.tvdb_id)
 
         total_size = 0
         for tvdb_id in all_tvdb_ids:
