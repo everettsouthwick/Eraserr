@@ -1,9 +1,4 @@
 {
-    "tautulli": {
-        "api_key": "",
-        "base_url": "http://host:port/api/v2",
-        "fetch_limit": 25
-    },
     "radarr": {
         "api_key": "",
         "base_url": "http://host:port/api/v3",
