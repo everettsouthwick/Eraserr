@@ -1,5 +1,6 @@
-from src.util import convert_bytes
 import requests
+from src.util import convert_bytes
+from src.models.radarr.radarrmovie import RadarrMovie
 
 
 class RadarrClient:
@@ -9,6 +10,51 @@ class RadarrClient:
         self.base_url = config.radarr.base_url
         self.exempt_tag_names = config.radarr.exempt_tag_names
         self.dry_run = config.dry_run
+
+    def get_movies(self):
+        """
+        Retrieves all movies from Radarr.
+
+        Returns:
+            RadarrMovie[]: A list of RadarrMovie objects.
+
+        Raises:
+            requests.exceptions.RequestException: If the request to retrieve the movies fails.
+        """
+        url = f"{self.base_url}/movie"
+        headers = {"X-Api-Key": self.api_key}
+        exempt_tag_ids = self.get_radarr_tag_ids(self.exempt_tag_names) if self.exempt_tag_names else []
+
+        response = requests.get(url, headers=headers, timeout=30)
+        if response.status_code == 200:
+            movies = []
+            movie_data = response.json()
+            for movie in movie_data:
+                movie_obj = self.parse_movie(movie, exempt_tag_ids)
+                movies.append(movie_obj)
+            return movies
+
+        raise requests.exceptions.RequestException(f"Fetching movies failed with status code {response.status_code}")
+
+    def parse_movie(self, movie, exempt_tag_ids):
+        """
+        Parses a Radarr movie object into a RadarrMovie object.
+
+        Args:
+            movie (dict): The Radarr movie object to parse.
+
+        Returns:
+            RadarrMovie: A RadarrMovie object representing the movie.
+        """
+        tmdb_id = movie["tmdbId"] if "tmdbId" in movie else None
+        imdb_id = movie["imdbId"] if "imdbId" in movie else None
+        path = movie["path"] if "path" in movie else None
+        title = movie["title"] if "title" in movie else None
+        movie_file_id = movie["movieFile"]["id"] if "movieFile" in movie and "id" in movie["movieFile"] else None
+        tags = movie["tags"] if "tags" in movie else []
+        exempt = any(tag in exempt_tag_ids for tag in tags) if exempt_tag_ids else False
+
+        return RadarrMovie(tmdb_id, imdb_id, path, title, movie_file_id, tags, exempt)
 
     def get_radarr_tag_ids(self, tag_names):
         """

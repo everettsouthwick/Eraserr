@@ -1,4 +1,5 @@
 import time
+from typing import Optional
 import schedule
 import requests
 from datetime import datetime
@@ -9,6 +10,7 @@ from src.sonarr import SonarrClient
 from src.util import convert_bytes
 from src.models.plex.plexmovie import PlexMovie
 from src.models.plex.plexseries import PlexSeries
+from src.models.radarr.radarrmovie import RadarrMovie
 
 
 class JobRunner:
@@ -50,7 +52,10 @@ class JobRunner:
 
         print("JOB :: Finished")
 
-    def should_delete_movie(self, item: PlexMovie):
+    def should_delete_movie(self, plex_movie: PlexMovie, radarr_movie: Optional[RadarrMovie]):
+        if radarr_movie is not None and radarr_movie.exempt:
+            return False
+
         last_watched_threshold = datetime.fromtimestamp(
             time.time() - self.config.last_watched_days_deletion_threshold * 24 * 60 * 60
         )
@@ -58,24 +63,21 @@ class JobRunner:
             time.time() - self.config.unwatched_days_deletion_threshold * 24 * 60 * 60
         )
 
-        if item.tmdb_id is None:
-            return False
-
-        if item.unwatched and item.added_at is not None and item.added_at < unwatched_threshold:
+        if plex_movie.unwatched and plex_movie.added_at is not None and plex_movie.added_at < unwatched_threshold:
             return True
 
         if (
-            not item.unwatched
-            and item.added_at is not None
-            and item.last_watched_date is not None
-            and item.added_at < last_watched_threshold
-            and item.last_watched_date < last_watched_threshold
+            not plex_movie.unwatched
+            and plex_movie.added_at is not None
+            and plex_movie.last_watched_date is not None
+            and plex_movie.added_at < last_watched_threshold
+            and plex_movie.last_watched_date < last_watched_threshold
         ):
             return True
 
         return False
 
-    def should_delete_series(self, item: PlexSeries):
+    def should_delete_series(self, series: PlexSeries):
         last_watched_threshold = datetime.fromtimestamp(
             time.time() - self.config.last_watched_days_deletion_threshold * 24 * 60 * 60
         )
@@ -83,18 +85,18 @@ class JobRunner:
             time.time() - self.config.unwatched_days_deletion_threshold * 24 * 60 * 60
         )
 
-        if item.tvdb_id is None:
+        if series.tvdb_id is None:
             return False
 
-        if item.unwatched and item.added_at is not None and item.added_at < unwatched_threshold:
+        if series.unwatched and series.added_at is not None and series.added_at < unwatched_threshold:
             return True
 
         if (
-            not item.unwatched
-            and item.added_at is not None
-            and item.last_watched_date is not None
-            and item.added_at < last_watched_threshold
-            and item.last_watched_date < last_watched_threshold
+            not series.unwatched
+            and series.added_at is not None
+            and series.last_watched_date is not None
+            and series.added_at < last_watched_threshold
+            and series.last_watched_date < last_watched_threshold
         ):
             return True
 
@@ -106,10 +108,22 @@ class JobRunner:
         """
         all_tmdb_ids = []
 
-        movies = self.plex.get_movies()
-        for movie in movies:
-            if self.should_delete_movie(movie):
-                all_tmdb_ids.append(movie.tmdb_id)
+        plex_movies = self.plex.get_movies()
+        radarr_movies = self.radarr.get_movies()
+
+        radarr_movies_dict_by_id = {movie.tmdb_id: movie for movie in radarr_movies}
+        radarr_movies_dict_by_path = {movie.path: movie for movie in radarr_movies}
+
+        for plex_movie in plex_movies:
+            radarr_movie = radarr_movies_dict_by_id.get(plex_movie.tmdb_id)
+            if radarr_movie is None:
+                radarr_movie = radarr_movies_dict_by_path.get(plex_movie.path)
+
+            if self.should_delete_movie(plex_movie, radarr_movie):
+                if plex_movie.tmdb_id is not None:
+                    all_tmdb_ids.append(plex_movie.tmdb_id)
+                elif radarr_movie is not None and radarr_movie.tmdb_id is not None:
+                    all_tmdb_ids.append(radarr_movie.tmdb_id)
 
         total_size = 0
         for tmdb_id in all_tmdb_ids:
@@ -126,7 +140,6 @@ class JobRunner:
             self.plex.find_and_update_library("movie")
         else:
             print("PLEX :: Skipping Plex library refresh")
-        # self.tautulli.refresh_library(section_ids, "movie")
 
         return str(convert_bytes(total_size))
 
@@ -156,6 +169,5 @@ class JobRunner:
             self.plex.find_and_update_library("show")
         else:
             print("PLEX :: Skipping Plex library refresh")
-        # self.tautulli.refresh_library(section_ids, "show")
 
         return str(convert_bytes(total_size))
