@@ -1,6 +1,7 @@
 """Module for interacting with Plex."""
 import os
 import time
+from datetime import datetime, timedelta
 from plexapi.server import PlexServer
 from src.models.plex.plexmovie import PlexMovie
 from src.models.plex.plexseries import PlexSeries
@@ -50,7 +51,8 @@ class PlexClient:
                 path = movie.media[0].parts[0].file
                 if path:
                     path = os.path.dirname(path)
-                history = self.plex._server.history(ratingKey=movie.ratingKey)
+                min_date = datetime.now() - timedelta(days=self.config.last_watched_days_deletion_threshold)
+                history = self.plex._server.history(mindate=min_date, ratingKey=movie.ratingKey)
                 last_watched_date = max(entry.viewedAt for entry in history) if history else None
 
                 # Create Movie object and append to list
@@ -98,7 +100,8 @@ class PlexClient:
                     # Get the series directory
                     path = os.path.dirname(path)
                 added_at = max(episode.addedAt for episode in series.episodes())
-                history = self.plex._server.history(ratingKey=series.ratingKey)
+                min_date = datetime.now() - timedelta(days=self.config.last_watched_days_deletion_threshold)
+                history = self.plex._server.history(mindate=min_date, ratingKey=series.ratingKey)
                 last_watched_date = max(entry.viewedAt for entry in history) if history else None
 
                 series_obj = PlexSeries(tvdb_id, imdb_db, path, series.title, added_at, last_watched_date)
