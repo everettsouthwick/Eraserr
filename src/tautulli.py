@@ -158,14 +158,17 @@ class TautulliClient:
                 item_id = self.fetch_metadata(rating_key)
 
                 if item_id is not None:
-                    if item["last_played"] is None and int(item["added_at"]) < unwatched_threshold_timestamp:
-                        count += 1
-                        item_ids.append(item_id)
-                    elif (
-                        item["last_played"] is not None and int(item["last_played"]) < last_watched_threshold_timestamp
-                    ):
-                        count += 1
-                        item_ids.append(item_id)
+                    if item["added_at"] != "":
+                        if item["last_played"] is None and int(item["added_at"]) < unwatched_threshold_timestamp:
+                            count += 1
+                            item_ids.append(item_id)
+                        elif (
+                            item["last_played"] is not None and int(item["last_played"]) < last_watched_threshold_timestamp
+                        ):
+                            count += 1
+                            item_ids.append(item_id)
+                    else:
+                        print(f"TAUTULLI :: {item['title']} is missing the added_at tag, skipping...")
 
             # Increment the 'start' parameter for the next iteration
             start += self.fetch_limit

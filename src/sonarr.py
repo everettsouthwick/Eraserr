@@ -193,7 +193,7 @@ class SonarrClient:
                     size_on_disk += episode["size"]
                     episodes_deleted_count += 1
                     print(
-                        f"SONARR :: DRY RUN :: {title} S{episode['seasonNumber']:02}E{episode['episodeNumber']:02} would be deleted. {convert_bytes(episode['size'])} would be freed up"
+                        f"SONARR :: DRY RUN :: {title} S{episode['seasonNumber']:02} ({episode['relativePath']}) would be deleted. {convert_bytes(episode['size'])} would be freed up"
                     )
                     continue
 
