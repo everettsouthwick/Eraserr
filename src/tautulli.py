@@ -159,11 +159,11 @@ class TautulliClient:
 
                 if item_id is not None:
                     if item["added_at"] != "":
-                        if item["last_played"] is None and int(item["added_at"]) < unwatched_threshold_timestamp:
+                        if (item["last_played"] is None or item["last_played"] == "") and int(item["added_at"]) < unwatched_threshold_timestamp:
                             count += 1
                             item_ids.append(item_id)
                         elif (
-                            item["last_played"] is not None and int(item["last_played"]) < last_watched_threshold_timestamp
+                            (item["last_played"] is not None or item["last_played"] == "") and int(item["last_played"]) < last_watched_threshold_timestamp
                         ):
                             count += 1
                             item_ids.append(item_id)
