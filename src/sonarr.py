@@ -1,7 +1,5 @@
-from src.util import convert_bytes
 import requests
-import json
-
+from src.util import convert_bytes
 
 class SonarrClient:
     def __init__(self, config):
@@ -9,6 +7,7 @@ class SonarrClient:
         self.api_key = config.sonarr.api_key
         self.base_url = config.sonarr.base_url
         self.monitor_continuing_series = config.sonarr.monitor_continuing_series
+        self.keep_pilot_episodes = config.sonarr.keep_pilot_episodes
         self.exempt_tag_names = config.sonarr.exempt_tag_names
         self.dry_run = config.dry_run
 
@@ -151,8 +150,8 @@ class SonarrClient:
         if response.status_code == 200:
             print(f"SONARR :: {title} deleted successfully. {convert_bytes(size_on_disk)} freed up")
             return True
-        else:
-            raise requests.exceptions.RequestException(f"Deletion failed with status code {response.status_code}")
+
+        raise requests.exceptions.RequestException(f"Deletion failed with status code {response.status_code}")
 
     def delete_unmonitored_episodes(self, series):
         """
@@ -185,8 +184,12 @@ class SonarrClient:
             episodes = response.json()
             if not episodes:
                 raise requests.exceptions.RequestException("Fetching Sonarr episodes failed")
+            
+            matches = ["s01e01", "s1e1"]
 
             for episode in episodes:
+                if episode["seasonNumber"] == 1 and any(x in episode["relativePath"].lower() for x in matches) and self.keep_pilot_episodes:
+                    continue
                 if episode["seasonNumber"] not in unmonitored_seasons:
                     continue
 

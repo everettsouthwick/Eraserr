@@ -18,6 +18,7 @@ class SonarrConfig:
     api_key: str
     base_url: str
     monitor_continuing_series: bool
+    keep_pilot_episodes: bool
     exempt_tag_names: List[str] = field(default_factory=list)
 
 
@@ -49,7 +50,7 @@ class Config:
     def __init__(self):
         # Default values are set
         self.radarr = RadarrConfig("", "http://host:port/api/v3", [])
-        self.sonarr = SonarrConfig("", "http://host:port/api/v3", True, [])
+        self.sonarr = SonarrConfig("", "http://host:port/api/v3", True, True, [])
         self.overseerr = OverseerrConfig("", "http://host:port/api/v1", 10)
         self.plex = PlexConfig("http://host:port", "", True)
         self.last_watched_days_deletion_threshold = 90

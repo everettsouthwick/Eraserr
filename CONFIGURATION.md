@@ -14,6 +14,7 @@ This guide contains all the information you need to configure `Eraserr` using a 
   - [API Key](#sonarr-api-key)
   - [Base URL](#sonarr-base-url)
   - [Monitor Continuing Series](#sonarr-monitor-continuing-series)
+  - [Keep Pilot Episodes](#sonarr-keep-pilot-episodes)
   - [Exempt Tag Names](#sonarr-exempt-tag-names)
 - [Overseerr](#overseerr)
   - [API Key](#overseerr-api-key)
@@ -90,6 +91,9 @@ Update the `base_url` with your Sonarr base URL.
 
 ### Sonarr Monitor Continuing Series
 Set to `true` if you want to monitor continuing series instead of deleting it from Sonarr so that new seasons are fetched.
+
+### Sonarr Keep Pilot Episodes
+Set to `true` if you want to prevent pilot episodes from being deleted.
 
 ### Sonarr Exempt Tag Names
 Set tag names to exempt from automatic deletion by updating the `exempt_tag_names` array.
