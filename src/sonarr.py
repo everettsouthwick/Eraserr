@@ -243,7 +243,13 @@ class SonarrClient:
         title = series["title"]
 
         body = {
-            "series": [series],
+            "series": [
+                {
+                    "id": series["id"],
+                    "monitored": True,
+                    "seasons": series["seasons"],
+                }
+            ],
             "monitoringOptions": {
                 "ignoreEpisodesWithFiles": True,
                 "ignoreEpisodesWithoutFiles": True,
