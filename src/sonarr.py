@@ -260,4 +260,4 @@ class SonarrClient:
             print(f"SONARR :: {title} unmonitored successfully")
             return True
 
-        raise requests.exceptions.RequestException(f"Unmonitoring failed with status code {response.status_code}")
+        raise requests.exceptions.RequestException(f"Unmonitoring {title} failed with status code {response.status_code}")
