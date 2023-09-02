@@ -74,8 +74,9 @@ Set tag names to exempt from automatic deletion by updating the `exempt_tag_name
 ```json
 "sonarr": {
     "api_key": "",
-    "base_url": "http://host:port/api/v3",
+    "base_url": "https://host:port/api/v3",
     "monitor_continuing_series": true,
+    "keep_pilot_episodes": true,
     "exempt_tag_names": [
         "exempt-from-auto-delete",
         "some-other-tag"

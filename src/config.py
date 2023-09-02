@@ -50,7 +50,7 @@ class Config:
     def __init__(self):
         # Default values are set
         self.radarr = RadarrConfig("", "http://host:port/api/v3", [])
-        self.sonarr = SonarrConfig("", "http://host:port/api/v3", True, True, [])
+        self.sonarr = SonarrConfig("", "https://host:port/api/v3", True, True, [])
         self.overseerr = OverseerrConfig("", "http://host:port/api/v1", 10)
         self.plex = PlexConfig("http://host:port", "", True)
         self.last_watched_days_deletion_threshold = 90
