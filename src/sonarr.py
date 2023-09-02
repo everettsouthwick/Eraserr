@@ -1,5 +1,6 @@
 from src.util import convert_bytes
 import requests
+import json
 
 
 class SonarrClient:
@@ -226,44 +227,35 @@ class SonarrClient:
     def unmonitor_unplayed_series(self, series):
         """
         Unmonitors a TV series in Sonarr by its Sonarr ID.
-
+        
         Args:
-            sonarr_id (int): The Sonarr ID of the TV series.
-            title (str): The title of the TV series.
-            size_on_disk (int): The size on disk of the TV series.
-
+            series (dict): A dictionary containing information about the TV series.
+            
         Returns:
             boolean: Whether the series was unmonitored.
 
         Raises:
             requests.exceptions.RequestException: If the unmonitoring fails.
         """
-        url = f"{self.base_url}/seasonpass"
+        series_id = series["id"]
+        url = f"{self.base_url}/series/{series_id}"
         headers = {"X-Api-Key": self.api_key}
         title = series["title"]
+        changed = False
 
-        body = {
-            "series": [
-                {
-                    "id": series["id"],
-                    "monitored": True,
-                    "seasons": series["seasons"],
-                }
-            ],
-            "monitoringOptions": {
-                "ignoreEpisodesWithFiles": True,
-                "ignoreEpisodesWithoutFiles": True,
-                "monitor": "future",
-            },
-        }
+        for season in series["seasons"][:-1]:
+            if season["monitored"]:
+                season["monitored"] = False
+                changed = True
 
-        if self.dry_run:
+        if self.dry_run and changed:
             print(f"SONARR :: DRY RUN :: {title} would be unmonitored")
-            return True
+            return changed
 
-        response = requests.post(url, headers=headers, json=body, timeout=30)
+        response = requests.put(url, headers=headers, timeout=30, json=series)
         if response.status_code == 202:
-            print(f"SONARR :: {title} unmonitored successfully")
-            return True
+            if changed:
+                print(f"SONARR :: {title} unmonitored successfully")
+            return changed
 
-        raise requests.exceptions.RequestException(f"Unmonitoring {title} failed with status code {response.status_code}\n{body}")
+        raise requests.exceptions.RequestException(f"Unmonitoring {title} failed with status code {response.status_code}")
