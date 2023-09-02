@@ -247,9 +247,9 @@ class SonarrClient:
         changed = False
 
         for season in series["seasons"]:
-            if season["nextAiring"] is not None:
+            if "nextAiring" in season["statistics"]:
                 continue
-            
+
             if season["monitored"]:
                 season["monitored"] = False
                 changed = True
