@@ -227,7 +227,7 @@ class SonarrClient:
             if unmonitor_episode_ids:
                 self.monitor_episodes_by_id(unmonitor_episode_ids, False)
             if delete_episode_ids:
-                self.search_episodes_by_id(delete_episode_ids)
+                self.delete_episodes_by_id(delete_episode_ids)
         
 
     def find_and_delete_series(self, tvdb_id):
