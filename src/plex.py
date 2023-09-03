@@ -51,7 +51,7 @@ class PlexClient:
             (guid.id.split("tmdb://")[1].split("?")[0] for guid in movie.guids if guid.id.startswith("tmdb://")),
             None,
         )
-        imdb_db = next(
+        imdb_id = next(
             (guid.id.split("imdb://")[1].split("?")[0] for guid in movie.guids if guid.id.startswith("imdb://")),
             None,
         )
@@ -65,7 +65,7 @@ class PlexClient:
         history = self.plex._server.history(mindate=min_date, ratingKey=movie.ratingKey)
         last_watched_date = max(entry.viewedAt for entry in history) if history else None
 
-        movie_obj = PlexMovie(tmdb_id, imdb_db, path, title, added_at, last_watched_date)
+        movie_obj = PlexMovie(tmdb_id, imdb_id, path, title, added_at, last_watched_date)
 
         return movie_obj
 
@@ -103,7 +103,7 @@ class PlexClient:
             (guid.id.split("tvdb://")[1].split("?")[0] for guid in series.guids if guid.id.startswith("tvdb://")),
             None,
         )
-        imdb_db = next(
+        imdb_id = next(
             (guid.id.split("imdb://")[1].split("?")[0] for guid in series.guids if guid.id.startswith("imdb://")),
             None,
         )
@@ -121,7 +121,7 @@ class PlexClient:
         history = self.plex._server.history(mindate=min_date, ratingKey=series.ratingKey)
         last_watched_date = max(entry.viewedAt for entry in history) if history else None
 
-        series_obj = PlexSeries(tvdb_id, imdb_db, path, title, added_at, last_watched_date)
+        series_obj = PlexSeries(tvdb_id, imdb_id, path, title, added_at, last_watched_date)
 
         return series_obj
 
@@ -174,3 +174,23 @@ class PlexClient:
                 time.sleep(sleep_time)
 
         print(f"PLEX :: Updated {len(sections)} Plex {section_type} library")
+
+    def get_currently_playing(self):
+        sessions = self.plex._server.sessions()
+        for session in sessions:
+            if not session.type == "episode":
+                continue
+
+            series_guid = session.grandparentGuid
+            series = self.plex.library.section('TV').getGuid(series_guid)
+            tvdb_id = next(
+            (guid.id.split("tvdb://")[1].split("?")[0] for guid in series.guids if guid.id.startswith("tvdb://")),
+                None,
+            )
+            imdb_id = next(
+            (guid.id.split("imdb://")[1].split("?")[0] for guid in series.guids if guid.id.startswith("imdb://")),
+                None,
+            )
+            print(tvdb_id)
+            print(imdb_id)
+    

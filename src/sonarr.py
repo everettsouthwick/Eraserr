@@ -1,5 +1,6 @@
 import requests
 from src.util import convert_bytes
+from src.models.sonarr.sonarrseries import SonarrSeries
 
 class SonarrClient:
     def __init__(self, config):
@@ -11,6 +12,51 @@ class SonarrClient:
         self.exempt_tag_names = config.sonarr.exempt_tag_names
         self.dry_run = config.dry_run
 
+    def get_series(self):
+        """
+        Retrieves all series from Sonarr.
+
+        Returns:
+            dict: A dictionary containing the series ID as the key and the series title as the value.
+
+        Raises:
+            requests.exceptions.RequestException: If the request to retrieve the series fails.
+        """
+        url = f"{self.base_url}/series"
+        headers = {"X-Api-Key": self.api_key}
+        exempt_tag_ids = self.get_sonarr_tag_ids(self.exempt_tag_names) if self.exempt_tag_names else []
+
+        response = requests.get(url, headers=headers, timeout=30)
+        if response.status_code == 200:
+            series = []
+            series_data = response.json()
+            for show in series_data:
+                series_obj = self.parse_series(show, exempt_tag_ids)
+                series.append(series_obj)
+            return series
+
+        raise requests.exceptions.RequestException(f"Fetching series failed with status code {response.status_code}")
+
+    def parse_series(self, series, exempt_tag_ids):
+        """
+        Parses a Sonarr series object into a SonarrSeries object.
+
+        Args:
+            series (dict): The Sonarr series object to parse.
+
+        Returns:
+            SonarrSeries: A SonarrSeries object representing the series.
+        """
+        tvdb_id = series["tvdbId"] if "tvdbId" in series else None
+        imdb_id = series["imdbId"] if "imdbId" in series else None
+        path = series["path"] if "path" in series else None
+        title = series["title"] if "title" in series else None
+        status = series["status"] if "status" in series else None
+        tags = series["tags"] if "tags" in series else []
+        exempt = any(tag in exempt_tag_ids for tag in tags) if exempt_tag_ids else False
+
+        return SonarrSeries(tvdb_id, imdb_id, path, title, status, tags, exempt)
+    
     def get_sonarr_tag_ids(self, tag_names):
         """
         Retrieves the Sonarr tag ID given its name.
@@ -19,7 +65,7 @@ class SonarrClient:
             tag_name (str): The name of the tag.
 
         Returns:
-            int: The ID of the tag.
+            int[]: The IDs of the exempted tag names.
 
         Raises:
             requests.exceptions.RequestException: If the request to retrieve the Sonarr tag ID fails.
