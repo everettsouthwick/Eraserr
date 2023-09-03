@@ -11,6 +11,7 @@ from src.util import convert_bytes
 from src.models.plex.plexmovie import PlexMovie
 from src.models.plex.plexseries import PlexSeries
 from src.models.radarr.radarrmovie import RadarrMovie
+from src.models.sonarr.sonarrseries import SonarrSeries
 
 
 class JobRunner:
@@ -77,7 +78,10 @@ class JobRunner:
 
         return False
 
-    def should_delete_series(self, series: PlexSeries):
+    def should_delete_series(self, plex_series: PlexSeries, sonarr_series: Optional[SonarrSeries]):
+        if sonarr_series is not None and sonarr_series.exempt:
+            return False
+        
         last_watched_threshold = datetime.fromtimestamp(
             time.time() - self.config.last_watched_days_deletion_threshold * 24 * 60 * 60
         )
@@ -85,18 +89,15 @@ class JobRunner:
             time.time() - self.config.unwatched_days_deletion_threshold * 24 * 60 * 60
         )
 
-        if series.tvdb_id is None:
-            return False
-
-        if series.unwatched and series.added_at is not None and series.added_at < unwatched_threshold:
+        if plex_series.unwatched and plex_series.added_at is not None and plex_series.added_at < unwatched_threshold:
             return True
-
+        
         if (
-            not series.unwatched
-            and series.added_at is not None
-            and series.last_watched_date is not None
-            and series.added_at < last_watched_threshold
-            and series.last_watched_date < last_watched_threshold
+            not plex_series.unwatched
+            and plex_series.added_at is not None
+            and plex_series.last_watched_date is not None
+            and plex_series.added_at < last_watched_threshold
+            and plex_series.last_watched_date < last_watched_threshold
         ):
             return True
 
@@ -149,10 +150,22 @@ class JobRunner:
         """
         all_tvdb_ids = []
 
-        series = self.plex.get_series()
-        for show in series:
-            if self.should_delete_series(show):
-                all_tvdb_ids.append(show.tvdb_id)
+        plex_series = self.plex.get_series()
+        sonarr_series = self.sonarr.get_series()
+
+        sonarr_series_dict_by_id = {series.tvdb_id: series for series in sonarr_series}
+        sonarr_series_dict_by_path = {series.path: series for series in sonarr_series}
+
+        for plex_show in plex_series:
+            sonarr_series = sonarr_series_dict_by_id.get(plex_show.tvdb_id)
+            if sonarr_series is None:
+                sonarr_series = sonarr_series_dict_by_path.get(plex_show.path)
+
+            if self.should_delete_series(plex_show, sonarr_series):
+                if plex_show.tvdb_id is not None:
+                    all_tvdb_ids.append(plex_show.tvdb_id)
+                elif sonarr_series is not None and sonarr_series.tvdb_id is not None:
+                    all_tvdb_ids.append(sonarr_series.tvdb_id)
 
         total_size = 0
         for tvdb_id in all_tvdb_ids:
