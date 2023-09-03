@@ -1,8 +1,12 @@
-import time
+"""
+This module contains the JobRunner class, 
+which is responsible for running the job function on a schedule.
+"""
+from datetime import datetime
 from typing import Optional
+import time
 import schedule
 import requests
-from datetime import datetime
 from src.overseerr import OverseerrClient
 from src.plex import PlexClient
 from src.radarr import RadarrClient
@@ -13,47 +17,88 @@ from src.models.plex.plexseries import PlexSeries
 from src.models.radarr.radarrmovie import RadarrMovie
 from src.models.sonarr.sonarrseries import SonarrSeries
 
-
 class JobRunner:
+    """
+    Class for running the job function on a schedule.
+    """
     def __init__(self, config):
         self.config = config
         self.overseerr = OverseerrClient(config)
         self.plex = PlexClient(config)
         self.radarr = RadarrClient(config)
         self.sonarr = SonarrClient(config)
+        self.dynamic_load = config.sonarr.dynamic_load
 
     def run(self):
-        # Run the job function immediately on first execution
-        self.job()
+        """
+        Runs the job function on a schedule.
+        """
+        if self.dynamic_load.enabled:
+            self.dynamic_load_job()
+            schedule.every(self.dynamic_load.schedule_interval).seconds.do(self.dynamic_load_job)
 
-        # Then schedule it to run subsequently every self.config.schedule_interval seconds
-        schedule.every(self.config.schedule_interval).seconds.do(self.job)
+        self.fetch_and_delete_job()
+        schedule.every(self.config.schedule_interval).seconds.do(self.fetch_and_delete_job)
+        
+
 
         while True:
             schedule.run_pending()
             time.sleep(1)
 
-    def job(self):
+    def fetch_and_delete_job(self):
         """
         This function fetches unplayed movies and TV shows and deletes them if they are eligible for deletion.
         """
-        print("JOB :: Starting")
+        print("FETCH AND DELETE JOB :: Starting")
 
-        total_size = self.fetch_movies()
+        total_size = self.fetch_and_delete_movies()
         if self.config.dry_run:
-            print("JOB :: DRY RUN :: Would have freed up from movies: " + str(total_size))
+            print("FETCH AND DELETE JOB :: DRY RUN :: Would have freed up from movies: " + str(total_size))
         else:
-            print("JOB :: Total freed up from movies: " + str(total_size))
+            print("FETCH AND DELETE JOB :: Total freed up from movies: " + str(total_size))
 
-        total_size = self.fetch_series()
+        total_size = self.fetch_and_delete_series()
         if self.config.dry_run:
-            print("JOB :: DRY RUN :: Would have freed up from series: " + str(total_size))
+            print("FETCH AND DELETE JOB :: DRY RUN :: Would have freed up from series: " + str(total_size))
         else:
-            print("JOB :: Total freed up from series: " + str(total_size))
+            print("FETCH AND DELETE JOB :: Total freed up from series: " + str(total_size))
 
-        print("JOB :: Finished")
+        print("FETCH AND DELETE JOB :: Finished")
 
+    def dynamic_load_job(self):
+        """
+        This function dynamically loads and unloads the Plex library based on the current time.
+        """
+        print("DYNAMIC LOAD JOB :: Starting")
+
+        episodes_count = self.fetch_and_load_episodes()
+        if self.config.dry_run:
+            print("DYNAMIC LOAD JOB :: DRY RUN :: Would have loaded " + str(episodes_count) + " episodes")
+        else:
+            print("DYNAMIC LOAD JOB :: Loaded " + str(episodes_count) + " episodes")
+
+        print("DYNAMIC LOAD JOB :: Finished")        
+    
+    def fetch_and_load_episodes(self):
+        series = self.plex.get_currently_playing()
+        for show in series:
+            self.sonarr.find_and_load_episodes(show.tvdb_id, show.season, show.episode)
+
+        return 0
+            
+    
     def should_delete_movie(self, plex_movie: PlexMovie, radarr_movie: Optional[RadarrMovie]):
+        """
+        Determines whether a movie should be deleted.
+        
+        Args:
+            plex_movie (PlexMovie): The Plex movie to check.
+            radarr_movie (Optional[RadarrMovie]): The Radarr movie to check.
+            
+        Returns:
+            bool: Whether the movie should be deleted.
+        """
         if radarr_movie is not None and radarr_movie.exempt:
             return False
 
@@ -79,6 +124,16 @@ class JobRunner:
         return False
 
     def should_delete_series(self, plex_series: PlexSeries, sonarr_series: Optional[SonarrSeries]):
+        """
+        Determines whether a TV show should be deleted.
+        
+        Args:
+            plex_series (PlexSeries): The Plex series to check.
+            sonarr_series (Optional[SonarrSeries]): The Sonarr series to check.
+        
+        Returns:
+            bool: Whether the TV show should be deleted.
+        """
         if sonarr_series is not None and sonarr_series.exempt:
             return False
         
@@ -103,7 +158,7 @@ class JobRunner:
 
         return False
 
-    def fetch_movies(self):
+    def fetch_and_delete_movies(self):
         """
         Fetches unplayed movies and deletes them if they are eligible for deletion.
         """
@@ -144,7 +199,7 @@ class JobRunner:
 
         return str(convert_bytes(total_size))
 
-    def fetch_series(self):
+    def fetch_and_delete_series(self):
         """
         Fetches unplayed TV shows and deletes them if they are eligible for deletion.
         """

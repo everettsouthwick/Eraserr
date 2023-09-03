@@ -12,6 +12,11 @@ class RadarrConfig:
     base_url: str
     exempt_tag_names: List[str] = field(default_factory=list)
 
+@dataclass
+class DynamicLoad:
+    enabled: bool
+    schedule_interval: int
+    episodes_to_load: int
 
 @dataclass
 class SonarrConfig:
@@ -20,7 +25,7 @@ class SonarrConfig:
     monitor_continuing_series: bool
     keep_pilot_episodes: bool
     exempt_tag_names: List[str] = field(default_factory=list)
-
+    dynamic_load: DynamicLoad = field(default_factory=DynamicLoad)
 
 @dataclass
 class OverseerrConfig:
@@ -34,7 +39,6 @@ class PlexConfig:
     base_url: str
     token: str
     refresh: bool
-
 
 @dataclass
 class Config:
@@ -50,7 +54,7 @@ class Config:
     def __init__(self):
         # Default values are set
         self.radarr = RadarrConfig("", "http://host:port/api/v3", [])
-        self.sonarr = SonarrConfig("", "https://host:port/api/v3", True, True, [])
+        self.sonarr = SonarrConfig("", "https://host:port/api/v3", True, True, [], DynamicLoad(False, 600, 5))
         self.overseerr = OverseerrConfig("", "http://host:port/api/v1", 10)
         self.plex = PlexConfig("http://host:port", "", True)
         self.last_watched_days_deletion_threshold = 90
@@ -119,6 +123,9 @@ class Config:
         try:
             self.radarr = RadarrConfig(**config["radarr"])
             self.sonarr = SonarrConfig(**config["sonarr"])
+            sonarr_config = config["sonarr"].copy()
+            dynamic_load_config = sonarr_config.pop("dynamic_load", None)
+            self.sonarr = SonarrConfig(**sonarr_config, dynamic_load=DynamicLoad(**dynamic_load_config))
             self.overseerr = OverseerrConfig(**config["overseerr"])
             self.plex = PlexConfig(**config["plex"])
             self.last_watched_days_deletion_threshold = config["last_watched_days_deletion_threshold"]

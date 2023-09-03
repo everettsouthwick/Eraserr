@@ -15,7 +15,12 @@
         "exempt_tag_names": [
             "exempt-from-auto-delete",
             "some-other-tag"
-        ]
+        ],
+        "dynamic_load": {
+            "enabled": false,
+            "schedule_interval": 600,
+            "episodes_to_load": 5
+        }
     },
     "overseerr": {
         "api_key": "",

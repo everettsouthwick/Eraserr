@@ -89,7 +89,7 @@ class PlexClient:
 
         return series_list
 
-    def parse_series(self, series):
+    def parse_series(self, series, season=None, episode=None):
         """
         Parses a Plex series object into a PlexSeries object.
 
@@ -121,7 +121,7 @@ class PlexClient:
         history = self.plex._server.history(mindate=min_date, ratingKey=series.ratingKey)
         last_watched_date = max(entry.viewedAt for entry in history) if history else None
 
-        series_obj = PlexSeries(tvdb_id, imdb_id, path, title, added_at, last_watched_date)
+        series_obj = PlexSeries(tvdb_id, imdb_id, path, title, added_at, last_watched_date, season, episode)
 
         return series_obj
 
@@ -176,21 +176,26 @@ class PlexClient:
         print(f"PLEX :: Updated {len(sections)} Plex {section_type} library")
 
     def get_currently_playing(self):
+        """
+        Retrieves a list of currently playing TV series.
+
+        Returns:
+            List[PlexSeries]: A list of PlexSeries objects representing the currently playing TV series.
+        """
+        series = []
         sessions = self.plex._server.sessions()
         for session in sessions:
             if not session.type == "episode":
                 continue
 
             series_guid = session.grandparentGuid
-            series = self.plex.library.section('TV').getGuid(series_guid)
-            tvdb_id = next(
-            (guid.id.split("tvdb://")[1].split("?")[0] for guid in series.guids if guid.id.startswith("tvdb://")),
-                None,
-            )
-            imdb_id = next(
-            (guid.id.split("imdb://")[1].split("?")[0] for guid in series.guids if guid.id.startswith("imdb://")),
-                None,
-            )
-            print(tvdb_id)
-            print(imdb_id)
+            sections = self.get_sections("show")
+            for section in sections:
+                show = section.getGuid(series_guid)
+                if show:
+                    parsed_series = self.parse_series(show, session.parentIndex, session.index)
+                    series.append(parsed_series)
+                    break
+        
+        return series
     

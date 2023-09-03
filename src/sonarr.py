@@ -10,6 +10,7 @@ class SonarrClient:
         self.monitor_continuing_series = config.sonarr.monitor_continuing_series
         self.keep_pilot_episodes = config.sonarr.keep_pilot_episodes
         self.exempt_tag_names = config.sonarr.exempt_tag_names
+        self.dynamic_load = config.sonarr.dynamic_load
         self.dry_run = config.dry_run
 
     def get_series(self):
@@ -112,6 +113,122 @@ class SonarrClient:
             return series[0]
 
         raise requests.exceptions.RequestException(f"Fetching Sonarr ID failed with status code {response.status_code}")
+    
+    def get_sonarr_episodes_by_series(self, series_id):
+        """
+        Retrieves the Sonarr ID, title, and size on disk for a TV series with the given TVDB ID.
+
+        Args:
+            tvdb_id (int): The TVDB ID of the TV series.
+            season (int): The season number of the TV series.
+
+        Returns:
+            tuple: A tuple containing the Sonarr ID (int), title (str), and size on disk (int) of the TV series.
+
+        Raises:
+            requests.exceptions.RequestException: If the request to retrieve the Sonarr ID fails.
+        """
+        url = f"{self.base_url}/episode"
+        headers = {"X-Api-Key": self.api_key}
+        params = {"seriesId": series_id}
+
+        response = requests.get(url, headers=headers, params=params, timeout=30)
+        if response.status_code == 200:
+            episodes = response.json()
+            if not episodes:
+                return None
+
+            return episodes
+
+        raise requests.exceptions.RequestException(f"Fetching Sonarr ID failed with status code {response.status_code}")
+    
+    def monitor_episodes_by_id(self, episode_ids, monitored):
+        url = f"{self.base_url}/episode/monitor"
+        headers = {"X-Api-Key": self.api_key}
+        body = {"episodeIds": episode_ids, "monitored": monitored}
+
+        response = requests.put(url, headers=headers, json=body, timeout=30)
+        if response.status_code == 202:
+            episodes = response.json()
+            if not episodes:
+                return None
+
+            return episodes
+
+        raise requests.exceptions.RequestException(f"Fetching Sonarr ID failed with status code {response.status_code}")
+    
+    def delete_episodes_by_id(self, episode_file_ids):
+        url = f"{self.base_url}/episodefile/bulk"
+        headers = {"X-Api-Key": self.api_key}
+        body = {"episodeFileIds": episode_file_ids}
+
+        response = requests.delete(url, headers=headers, json=body, timeout=30)
+        if response.status_code == 200:
+            episodes = response.json()
+            if not episodes:
+                return None
+
+            return episodes
+    
+    def search_episodes_by_id(self, episode_ids):
+        url = f"{self.base_url}/command"
+        headers = {"X-Api-Key": self.api_key}
+        body = {"name": "EpisodeSearch", "episodeIds": episode_ids}
+
+        response = requests.post(url, headers=headers, json=body, timeout=30)
+        if response.status_code == 201:
+            episodes = response.json()
+            if not episodes:
+                return None
+
+            return episodes
+    
+    def find_and_load_episodes(self, tvdb_id, season, episode):
+        series = self.get_sonarr_item(tvdb_id)
+        self.load_and_unload_episodes(series, season, episode)
+
+        if series is None:
+            raise requests.exceptions.RequestException("Fetching Sonarr ID failed")
+    
+    def load_and_unload_episodes(self, series, seasonNumber, episodeNumber):
+        episode_count = 0
+        episodes = self.get_sonarr_episodes_by_series(series["id"])
+        filtered_episodes = [episode for episode in episodes if episode['seasonNumber'] != 0]
+        sorted_episodes = sorted(filtered_episodes, key=lambda x: (x['seasonNumber'], x['episodeNumber']))
+        episode_index = next((index for (index, episode) in enumerate(sorted_episodes) if episode['seasonNumber'] == seasonNumber and episode['episodeNumber'] == episodeNumber), None)
+        if episode_index is not None:
+            episodes_to_load = sorted_episodes[episode_index+1:episode_index+self.dynamic_load.episodes_to_load+1]
+            episodes_to_unload = sorted_episodes[self.dynamic_load.episodes_to_load:episode_index-1]
+
+            monitor_episode_ids = []
+            search_episode_ids = []
+            for episode in episodes_to_load:
+                if not episode["monitored"]:
+                    monitor_episode_ids.append(episode["id"])
+                if not episode["hasFile"]:
+                    print(f"SONARR :: Loading S{episode['seasonNumber']:02}E{episode['episodeNumber']:02} of {series['title']}")
+                    episode_count += 1
+                    search_episode_ids.append(episode["id"])
+
+            if monitor_episode_ids:
+                self.monitor_episodes_by_id(monitor_episode_ids, True)
+            if search_episode_ids:
+                self.search_episodes_by_id(search_episode_ids)
+
+            unmonitor_episode_ids = []
+            delete_episode_ids = []
+            for episode in episodes_to_unload:
+                if episode["monitored"]:
+                    unmonitor_episode_ids.append(episode["id"])
+                if episode["hasFile"]:
+                    print(f"SONARR :: Unloading S{episode['seasonNumber']:02}E{episode['episodeNumber']:02} of {series['title']}")
+                    delete_episode_ids.append(episode["episodeFileId"])
+
+            if unmonitor_episode_ids:
+                self.monitor_episodes_by_id(unmonitor_episode_ids, False)
+            if delete_episode_ids:
+                self.search_episodes_by_id(delete_episode_ids)
+        
 
     def find_and_delete_series(self, tvdb_id):
         """
