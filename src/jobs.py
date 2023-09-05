@@ -73,9 +73,9 @@ class JobRunner:
         print("DYNAMIC LOAD JOB :: Starting")
 
         episodes_count = self.fetch_and_load_episodes()
-        if self.config.dry_run:
+        if self.config.dry_run and episodes_count > 0:
             print("DYNAMIC LOAD JOB :: DRY RUN :: Would have loaded " + str(episodes_count) + " episodes")
-        else:
+        elif episodes_count > 0:
             print("DYNAMIC LOAD JOB :: Loaded " + str(episodes_count) + " episodes")
 
         print("DYNAMIC LOAD JOB :: Finished")        

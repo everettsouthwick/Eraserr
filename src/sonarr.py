@@ -185,10 +185,11 @@ class SonarrClient:
     
     def find_and_load_episodes(self, tvdb_id, season, episode):
         series = self.get_sonarr_item(tvdb_id)
-        self.load_and_unload_episodes(series, season, episode)
 
         if series is None:
             raise requests.exceptions.RequestException("Fetching Sonarr ID failed")
+        
+        return self.load_and_unload_episodes(series, season, episode)
     
     def load_and_unload_episodes(self, series, seasonNumber, episodeNumber):
         episode_count = 0
@@ -228,6 +229,9 @@ class SonarrClient:
                 self.monitor_episodes_by_id(unmonitor_episode_ids, False)
             if delete_episode_ids:
                 self.delete_episodes_by_id(delete_episode_ids)
+
+        return episode_count
+
         
 
     def find_and_delete_series(self, tvdb_id):
