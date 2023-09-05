@@ -199,7 +199,7 @@ class SonarrClient:
         episode_index = next((index for (index, episode) in enumerate(sorted_episodes) if episode['seasonNumber'] == seasonNumber and episode['episodeNumber'] == episodeNumber), None)
         if episode_index is not None:
             episodes_to_load = sorted_episodes[episode_index+1:episode_index+self.dynamic_load.episodes_to_load+1]
-            episodes_to_unload = sorted_episodes[self.dynamic_load.episodes_to_load:episode_index-1]
+            episodes_to_unload = sorted_episodes[self.dynamic_load.episodes_to_load:episode_index-self.dynamic_load.episodes_to_load]
 
             monitor_episode_ids = []
             search_episode_ids = []
