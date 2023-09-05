@@ -191,12 +191,12 @@ class SonarrClient:
         
         return self.load_and_unload_episodes(series, season, episode)
     
-    def load_and_unload_episodes(self, series, seasonNumber, episodeNumber):
+    def load_and_unload_episodes(self, series, season_number, episode_number):
         episode_count = 0
         episodes = self.get_sonarr_episodes_by_series(series["id"])
         filtered_episodes = [episode for episode in episodes if episode['seasonNumber'] != 0]
         sorted_episodes = sorted(filtered_episodes, key=lambda x: (x['seasonNumber'], x['episodeNumber']))
-        episode_index = next((index for (index, episode) in enumerate(sorted_episodes) if episode['seasonNumber'] == seasonNumber and episode['episodeNumber'] == episodeNumber), None)
+        episode_index = next((index for (index, episode) in enumerate(sorted_episodes) if episode['seasonNumber'] == season_number and episode['episodeNumber'] == episode_number), None)
         if episode_index is not None:
             episodes_to_load = sorted_episodes[episode_index+1:episode_index+self.dynamic_load.episodes_to_load+1]
             episodes_to_unload = sorted_episodes[self.dynamic_load.episodes_to_load:episode_index-self.dynamic_load.episodes_to_load]
