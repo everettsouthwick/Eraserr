@@ -162,7 +162,7 @@ class SonarrClient:
         headers = {"X-Api-Key": self.api_key}
         body = {"episodeFileIds": episode_file_ids}
 
-        response = requests.delete(url, headers=headers, json=body, timeout=30)
+        response = requests.delete(url, headers=headers, json=body, timeout=60)
         if response.status_code == 200:
             episodes = response.json()
             if not episodes:
@@ -223,7 +223,8 @@ class SonarrClient:
                     unmonitor_episode_ids.append(episode["id"])
                 if episode["hasFile"]:
                     print(f"SONARR :: Unloading S{episode['seasonNumber']:02}E{episode['episodeNumber']:02} of {series['title']}")
-                    delete_episode_ids.append(episode["episodeFileId"])
+                    if episode["episodeFileId"] not in delete_episode_ids:
+                        delete_episode_ids.append(episode["episodeFileId"])
 
             if unmonitor_episode_ids:
                 self.monitor_episodes_by_id(unmonitor_episode_ids, False)
