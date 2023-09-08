@@ -184,7 +184,15 @@ class SonarrClient:
             return episodes
     
     def find_and_load_episodes(self, tvdb_id, season, episode):
+        exempt_tag_ids = self.get_sonarr_tag_ids(self.exempt_tag_names)
         series = self.get_sonarr_item(tvdb_id)
+
+        title = series["title"]
+        tags = series["tags"]
+
+        if exempt_tag_ids is not None and tags is not None and any(tag in exempt_tag_ids for tag in tags):
+            print(f"SONARR :: {title} is exempt from dynamic load deletion")
+            return False, 0
 
         if series is None:
             raise requests.exceptions.RequestException("Fetching Sonarr ID failed")
