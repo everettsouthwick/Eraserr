@@ -7,10 +7,10 @@ from typing import Optional
 import time
 import schedule
 import requests
-from src.overseerr import OverseerrClient
-from src.plex import PlexClient
-from src.radarr import RadarrClient
-from src.sonarr import SonarrClient
+from src.clients.overseerr import OverseerrClient
+from src.clients.plex import PlexClient
+from src.clients.radarr import RadarrClient
+from src.clients.sonarr import SonarrClient
 from src.util import convert_bytes
 from src.models.plex.plexmovie import PlexMovie
 from src.models.plex.plexseries import PlexSeries
