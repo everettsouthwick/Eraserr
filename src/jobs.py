@@ -40,8 +40,6 @@ class JobRunner:
         self.fetch_and_delete_job()
         schedule.every(self.config.schedule_interval).seconds.do(self.fetch_and_delete_job)
         
-
-
         while True:
             schedule.run_pending()
             time.sleep(1)
@@ -78,7 +76,7 @@ class JobRunner:
         elif episodes_count > 0:
             print("DYNAMIC LOAD JOB :: Loaded " + str(episodes_count) + " episodes")
 
-        print("DYNAMIC LOAD JOB :: Finished")        
+        print("DYNAMIC LOAD JOB :: Finished")
     
     def fetch_and_load_episodes(self):
         series = self.plex.get_currently_playing()
@@ -103,10 +101,10 @@ class JobRunner:
             return False
 
         last_watched_threshold = datetime.fromtimestamp(
-            time.time() - self.config.last_watched_days_deletion_threshold * 24 * 60 * 60
+            time.time() - self.config.last_watched_deletion_threshold
         )
         unwatched_threshold = datetime.fromtimestamp(
-            time.time() - self.config.unwatched_days_deletion_threshold * 24 * 60 * 60
+            time.time() - self.config.unwatched_deletion_threshold
         )
 
         if plex_movie.unwatched and plex_movie.added_at is not None and plex_movie.added_at < unwatched_threshold:
@@ -138,10 +136,10 @@ class JobRunner:
             return False
         
         last_watched_threshold = datetime.fromtimestamp(
-            time.time() - self.config.last_watched_days_deletion_threshold * 24 * 60 * 60
+            time.time() - self.config.last_watched_deletion_threshold
         )
         unwatched_threshold = datetime.fromtimestamp(
-            time.time() - self.config.unwatched_days_deletion_threshold * 24 * 60 * 60
+            time.time() - self.config.unwatched_deletion_threshold
         )
 
         if plex_series.unwatched and plex_series.added_at is not None and plex_series.added_at < unwatched_threshold:

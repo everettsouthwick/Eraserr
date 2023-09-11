@@ -32,8 +32,8 @@
         "token": "",
         "refresh": true
     },
-    "last_watched_days_deletion_threshold": 90,
-    "unwatched_days_deletion_threshold": 30,
+    "last_watched_deletion_threshold": "90d",
+    "unwatched_deletion_threshold": "30d",
     "dry_run": true,
     "schedule_interval": 86400
 }

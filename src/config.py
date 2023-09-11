@@ -1,5 +1,6 @@
 import json
 import sys
+import re
 from typing import Any, Dict, List
 from dataclasses import dataclass, field
 
@@ -46,8 +47,8 @@ class Config:
     sonarr: SonarrConfig
     overseerr: OverseerrConfig
     plex: PlexConfig
-    last_watched_days_deletion_threshold: int
-    unwatched_days_deletion_threshold: int
+    last_watched_deletion_threshold: int
+    unwatched_deletion_threshold: int
     dry_run: bool
     schedule_interval: int
 
@@ -57,8 +58,8 @@ class Config:
         self.sonarr = SonarrConfig("", "https://host:port/api/v3", True, True, [], DynamicLoad(False, 600, 5))
         self.overseerr = OverseerrConfig("", "http://host:port/api/v1", 10)
         self.plex = PlexConfig("http://host:port", "", True)
-        self.last_watched_days_deletion_threshold = 90
-        self.unwatched_days_deletion_threshold = 30
+        self.last_watched_deletion_threshold = 7776000
+        self.unwatched_deletion_threshold = 2592000
         self.dry_run = True
         self.schedule_interval = 86400
 
@@ -103,13 +104,12 @@ class Config:
         """
         # List of required configuration keys
         required_keys = [
-            "tautulli",
             "radarr",
             "sonarr",
             "overseerr",
             "plex",
-            "last_watched_days_deletion_threshold",
-            "unwatched_days_deletion_threshold",
+            "last_watched_deletion_threshold",
+            "unwatched_deletion_threshold",
             "dry_run",
             "schedule_interval",
         ]
@@ -128,8 +128,8 @@ class Config:
             self.sonarr = SonarrConfig(**sonarr_config, dynamic_load=DynamicLoad(**dynamic_load_config))
             self.overseerr = OverseerrConfig(**config["overseerr"])
             self.plex = PlexConfig(**config["plex"])
-            self.last_watched_days_deletion_threshold = config["last_watched_days_deletion_threshold"]
-            self.unwatched_days_deletion_threshold = config["unwatched_days_deletion_threshold"]
+            self.last_watched_deletion_threshold = self._convert_to_seconds(config["last_watched_deletion_threshold"], "last_watched_deletion_threshold")
+            self.unwatched_deletion_threshold = self._convert_to_seconds(config["unwatched_deletion_threshold"], "unwatched_deletion_threshold")
             self.dry_run = config["dry_run"] in [True, "True", "true", "1"]
             self.schedule_interval = config["schedule_interval"]
         except KeyError as err:
@@ -144,3 +144,40 @@ class Config:
             print("Error in configuration file:")
             print(err)
             sys.exit()
+    
+    def _convert_to_seconds(self, time: str, key_name: str) -> int:
+        """
+        Converts a time string to seconds.
+
+        Args:
+            time: A string representing a time interval in the format of <integer><unit>. (e.g. 45s (seconds), 30m (minutes), 2h (hours), 1d (days))
+
+        Returns:
+            An integer representing the time interval in seconds.
+
+        Raises:
+            ValueError: If the time string is not in the correct format or contains an invalid time unit.
+        """
+        # If the time is already an integer, return it
+        try:
+            return int(time)
+        except:
+            pass
+
+        match = re.match(r'^(\d+)([smhd])$', time.lower())
+        
+        if not match:
+            raise ValueError(f"{key_name} must be in the format of <integer><unit>. (e.g. 45s (seconds), 30m (minutes), 2h (hours), 1d (days))")
+        
+        value, unit = int(match.group(1)), match.group(2)
+
+        if unit == "s":
+            return value
+        elif unit == "m":
+            return value * 60
+        elif unit == "h":
+            return value * 3600
+        elif unit == "d":
+            return value * 86400
+        else:
+            raise ValueError(f"'retrieval_interval' invalid time unit: {unit}. Accepted units: s (seconds), m (minutes), h (hours), d (days).")
