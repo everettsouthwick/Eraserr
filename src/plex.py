@@ -61,7 +61,7 @@ class PlexClient:
         title = movie.title
         # Set it to 1970-01-01 if the movie was added before Plex started tracking that data
         added_at = movie.addedAt if movie.addedAt else datetime.fromtimestamp(0)
-        min_date = datetime.now() - timedelta(days=self.config.last_watched_days_deletion_threshold)
+        min_date = datetime.now() - timedelta(seconds=self.config.last_watched_deletion_threshold)
         history = self.plex._server.history(mindate=min_date, ratingKey=movie.ratingKey)
         last_watched_date = max(entry.viewedAt for entry in history) if history else None
 
@@ -117,7 +117,7 @@ class PlexClient:
         title = series.title
         added_at = series.addedAt if series.addedAt else datetime.fromtimestamp(0)
         added_at = max(episode.addedAt for episode in series.episodes()) if series.episodes() else added_at
-        min_date = datetime.now() - timedelta(days=self.config.last_watched_days_deletion_threshold)
+        min_date = datetime.now() - timedelta(seconds=self.config.last_watched_deletion_threshold)
         history = self.plex._server.history(mindate=min_date, ratingKey=series.ratingKey)
         last_watched_date = max(entry.viewedAt for entry in history) if history else None
 

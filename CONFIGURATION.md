@@ -140,18 +140,18 @@ Set to `true` to refresh your Plex library. The program will refresh your Plex l
 ## Last Watched Days Deletion Threshold
 
 ```json
-"last_watched_days_deletion_threshold": 90
+"last_watched_deletion_threshold": "90d"
 ```
 
-Set the days threshold for media deletion. Any media last watched in the past given number of days will be considered stale and flagged for deletion. Replace `last_watched_days_deletion_threshold` with the desired value.
+Set the threshold for media deletion. Valid values are `<integer><s/m/h/d>` (seconds, minutes, hours, days). Any media last watched in the past given amount of time will be considered stale and flagged for deletion. Replace `last_watched_deletion_threshold` with the desired value.
 
 ## Unwatched Days Deletion Threshold
 
 ```json
-"unwatched_days_deletion_threshold": 30
+"unwatched_deletion_threshold": "30d"
 ```
 
-Set the days threshold for media deletion. Any media that has never been watched in the past given number of days will be considered stale and flagged for deletion. Replace `unwatched_days_deletion_threshold` with the desired value.
+Set the threshold for media deletion. Valid values are `<integer><s/m/h/d>` (seconds, minutes, hours, days). Any media that has never been watched in the past given amount of time will be considered stale and flagged for deletion. Replace `unwatched_deletion_threshold` with the desired value.
 
 ## Dry Run
 
