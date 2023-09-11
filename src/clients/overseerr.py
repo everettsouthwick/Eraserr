@@ -11,15 +11,6 @@ class OverseerrClient:
         self.fetch_limit = config.overseerr.fetch_limit
 
     def __get_media(self):
-        """
-        Fetches all media from the Overseerr API.
-
-        Returns:
-            A list of media objects from the Overseerr API.
-
-        Raises:
-            requests.exceptions.RequestException: If the API request fails.
-        """
         url = f"{self.base_url}/media"
         headers = {"X-API-KEY": self.api_key}
         params = {"take": self.fetch_limit, "skip": 0}
@@ -41,18 +32,6 @@ class OverseerrClient:
         return media_list
 
     def __delete_media(self, media_id: int):
-        """
-        Deletes media with the given ID from the Overseerr API.
-        
-        Args:
-            media_id: The ID of the media to delete.
-        
-        Returns:
-            True if the media was deleted successfully.
-        
-        Raises:
-            requests.exceptions.RequestException: If the API request fails.
-        """
         url = f"{self.base_url}/media/{media_id}"
         headers = {"X-API-KEY": self.api_key}
 
