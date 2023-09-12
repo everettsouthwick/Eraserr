@@ -19,8 +19,10 @@ class RadarrConfig:
 @dataclass
 class DynamicLoad:
     enabled: bool
-    schedule_interval: int
     episodes_to_load: int
+    episodes_to_keep: int
+    watched_deletion_threshold: int = 7776000
+    schedule_interval: int = 600
 
 @dataclass
 class SonarrConfig:
@@ -54,7 +56,7 @@ class Config:
     overseerr: OverseerrConfig
     dry_run: bool
     log_level: str
-    schedule_interval: int
+    schedule_interval: int = 86400
     
 
     def __init__(self):
@@ -64,7 +66,7 @@ class Config:
         self.schedule_interval = 86400
         self.plex = PlexConfig("https://host:port", "")
         self.radarr = RadarrConfig(False, "", "https://host:port/api/v3", [], 7776000, 2592000)
-        self.sonarr = SonarrConfig(False, "", "https://host:port/api/v3", True, [], DynamicLoad(False, 600, 5), 7776000, 2592000)
+        self.sonarr = SonarrConfig(False, "", "https://host:port/api/v3", True, [], DynamicLoad(False, 3, 3, 7776000, 600), 7776000, 2592000)
         self.overseerr = OverseerrConfig(False, "", "http://host:port/api/v1", 10)
         
         # Read the config file
@@ -129,6 +131,7 @@ class Config:
             dynamic_load_config = sonarr_config.pop("dynamic_load", None)
             self.sonarr = SonarrConfig(**sonarr_config, dynamic_load=DynamicLoad(**dynamic_load_config))
             self.sonarr.dynamic_load.schedule_interval = self._convert_to_seconds(self.sonarr.dynamic_load.schedule_interval, "sonarr.dynamic_load.schedule_interval")
+            self.sonarr.dynamic_load.watched_deletion_threshold = self._convert_to_seconds(self.sonarr.dynamic_load.watched_deletion_threshold, "sonarr.dynamic_load.watched_deletion_threshold")
             self.sonarr.watched_deletion_threshold = self._convert_to_seconds(self.sonarr.watched_deletion_threshold, "sonarr.watched_deletion_threshold")
             self.sonarr.unwatched_deletion_threshold = self._convert_to_seconds(self.sonarr.unwatched_deletion_threshold, "sonarr.unwatched_deletion_threshold")
             self.overseerr = OverseerrConfig(**config["overseerr"])

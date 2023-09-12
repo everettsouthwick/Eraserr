@@ -4,6 +4,7 @@ which is responsible for running the job function on a schedule.
 """
 import time
 import schedule
+from collections import defaultdict
 from src.clients.plex import PlexClient
 from src.clients.radarr import RadarrClient
 from src.clients.sonarr import SonarrClient
@@ -22,11 +23,11 @@ class JobRunner:
         self.radarr = RadarrClient(config)
         self.sonarr = SonarrClient(config)
         self.overseerr = OverseerrClient(config)
-        self.dynamic_load = config.sonarr.dynamic_load
         self.radarr_enabled = config.radarr.enabled
         self.radarr_watched_deletion_threshold = config.radarr.watched_deletion_threshold
         self.radarr_unwatched_deletion_threshold = config.radarr.unwatched_deletion_threshold
         self.sonarr_enabled = config.sonarr.enabled
+        self.dynamic_load = config.sonarr.dynamic_load
         self.sonarr_watched_deletion_threshold = config.sonarr.watched_deletion_threshold
         self.sonarr_unwatched_deletion_threshold = config.sonarr.unwatched_deletion_threshold
         self.overseerr_enabled = config.overseerr.enabled
@@ -63,19 +64,17 @@ class JobRunner:
 
         logger.debug("[JOB] Fetch and delete job finished")
 
-    # def dynamic_load_job(self):
-    #     """
-    #     This function dynamically loads and unloads the Plex library based on the current time.
-    #     """
-    #     print("DYNAMIC LOAD JOB :: Starting")
+    def dynamic_load_job(self):
+        """
+        This function dynamically loads and unloads the Plex library based on the current time.
+        """
+        logger.debug("[JOB] Dynamic load job started")
 
-    #     episodes_count = self.fetch_and_load_episodes()
-    #     if self.config.dry_run and episodes_count > 0:
-    #         print("DYNAMIC LOAD JOB :: DRY RUN :: Would have loaded " + str(episodes_count) + " episodes")
-    #     elif episodes_count > 0:
-    #         print("DYNAMIC LOAD JOB :: Loaded " + str(episodes_count) + " episodes")
+        if self.sonarr_enabled:
+            logger.debug("[JOB] Dynamic loading series")
+            self.dynamic_load_series()
 
-    #     print("DYNAMIC LOAD JOB :: Finished")
+        logger.debug("[JOB] Dynamic load job finished")
     
     # def fetch_and_load_episodes(self):
     #     series = self.plex.get_currently_playing()
@@ -122,3 +121,18 @@ class JobRunner:
         media_deleted = self.sonarr.get_and_delete_media(media_to_delete, self.dry_run)
         if self.overseerr_enabled:
             self.overseerr.get_and_delete_media(media_deleted, self.dry_run)
+
+    # def dynamic_load_series(self):
+    #     media = self.plex.get_media_to_unload(self.dynamic_load.watched_deletion_threshold)
+
+    #     media_to_delete = defaultdict(list)
+    #     for key, episodes in media.items():
+    #         for episode in episodes:
+    #             tvdb_id = next(
+    #                 (guid.id.split("tvdb://")[1].split("?")[0] for guid in episode.guids if guid.id.startswith("tvdb://")),
+    #                 None,
+    #             )
+    #             if tvdb_id is not None:
+    #                 media_to_delete[key].append(tvdb_id)
+
+    #     media_deleted = self.sonarr.get_and_delete_media_episodes(media_to_delete, self.dry_run)

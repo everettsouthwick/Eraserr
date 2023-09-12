@@ -186,7 +186,19 @@ class SonarrClient:
 
         return media_to_delete
 
-    
+    def get_and_delete_media_episodes(self, media_to_delete: dict, dry_run: bool = False):
+        media = self.__get_media()
+        exempt_tag_ids = self.__get_exempt_tag_ids(self.exempt_tag_names)
+
+        for series in media:
+            if str(series.get("tvdbId")) not in media_to_delete.keys():
+                continue
+
+            if any(tag in exempt_tag_ids for tag in series.get("tags", [])):
+                media_to_delete.pop(str(series.get("tvdbId")))
+                logger.info("[SONARR] Skipping %s because it is exempt.", series.get("title"))
+                continue
+        return
     # def get_sonarr_episodes_by_series(self, series_id):
     #     """
     #     Retrieves the Sonarr ID, title, and size on disk for a TV series with the given TVDB ID.

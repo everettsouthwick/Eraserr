@@ -28,8 +28,10 @@
         ],
         "dynamic_load": {
             "enabled": false,
-            "schedule_interval": "5m",
-            "episodes_to_load": 3
+            "episodes_to_load": 3,
+            "episodes_to_keep": 3,
+            "watched_deletion_threshold": "30d",
+            "schedule_interval": "5m"
         },
         "watched_deletion_threshold": "180d",
         "unwatched_deletion_threshold": "30d"
