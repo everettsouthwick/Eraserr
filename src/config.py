@@ -9,9 +9,12 @@ CONFIG_FILE_NAME = "config.json"
 
 @dataclass
 class RadarrConfig:
+    enabled: bool
     api_key: str
     base_url: str
     exempt_tag_names: List[str] = field(default_factory=list)
+    watched_deletion_threshold: int = 7776000
+    unwatched_deletion_threshold: int = 2592000
 
 @dataclass
 class DynamicLoad:
@@ -21,15 +24,18 @@ class DynamicLoad:
 
 @dataclass
 class SonarrConfig:
+    enabled: bool
     api_key: str
     base_url: str
     monitor_continuing_series: bool
-    keep_pilot_episodes: bool
     exempt_tag_names: List[str] = field(default_factory=list)
     dynamic_load: DynamicLoad = field(default_factory=DynamicLoad)
+    watched_deletion_threshold: int = 7776000
+    unwatched_deletion_threshold: int = 2592000
 
 @dataclass
 class OverseerrConfig:
+    enabled: bool
     api_key: str
     base_url: str
     fetch_limit: int
@@ -39,30 +45,28 @@ class OverseerrConfig:
 class PlexConfig:
     base_url: str
     token: str
-    refresh: bool
 
 @dataclass
 class Config:
+    plex: PlexConfig
     radarr: RadarrConfig
     sonarr: SonarrConfig
     overseerr: OverseerrConfig
-    plex: PlexConfig
-    last_watched_deletion_threshold: int
-    unwatched_deletion_threshold: int
     dry_run: bool
+    log_level: str
     schedule_interval: int
+    
 
     def __init__(self):
         # Default values are set
-        self.radarr = RadarrConfig("", "http://host:port/api/v3", [])
-        self.sonarr = SonarrConfig("", "https://host:port/api/v3", True, True, [], DynamicLoad(False, 600, 5))
-        self.overseerr = OverseerrConfig("", "http://host:port/api/v1", 10)
-        self.plex = PlexConfig("http://host:port", "", True)
-        self.last_watched_deletion_threshold = 7776000
-        self.unwatched_deletion_threshold = 2592000
         self.dry_run = True
+        self.log_level = "INFO"
         self.schedule_interval = 86400
-
+        self.plex = PlexConfig("https://host:port", "")
+        self.radarr = RadarrConfig(False, "", "https://host:port/api/v3", [], 7776000, 2592000)
+        self.sonarr = SonarrConfig(False, "", "https://host:port/api/v3", True, [], DynamicLoad(False, 600, 5), 7776000, 2592000)
+        self.overseerr = OverseerrConfig(False, "", "http://host:port/api/v1", 10)
+        
         # Read the config file
         config = self._get_config()
 
@@ -104,14 +108,10 @@ class Config:
         """
         # List of required configuration keys
         required_keys = [
-            "radarr",
-            "sonarr",
-            "overseerr",
-            "plex",
-            "last_watched_deletion_threshold",
-            "unwatched_deletion_threshold",
             "dry_run",
+            "log_level",
             "schedule_interval",
+            "plex"        
         ]
 
         # Check for missing keys
@@ -122,16 +122,19 @@ class Config:
         # Parse and validate configuration values
         try:
             self.radarr = RadarrConfig(**config["radarr"])
+            self.radarr.watched_deletion_threshold = self._convert_to_seconds(self.radarr.watched_deletion_threshold, "radarr.watched_deletion_threshold")
+            self.radarr.unwatched_deletion_threshold = self._convert_to_seconds(self.radarr.unwatched_deletion_threshold, "radarr.unwatched_deletion_threshold")
             self.sonarr = SonarrConfig(**config["sonarr"])
             sonarr_config = config["sonarr"].copy()
             dynamic_load_config = sonarr_config.pop("dynamic_load", None)
             self.sonarr = SonarrConfig(**sonarr_config, dynamic_load=DynamicLoad(**dynamic_load_config))
+            self.sonarr.dynamic_load.schedule_interval = self._convert_to_seconds(self.sonarr.dynamic_load.schedule_interval, "sonarr.dynamic_load.schedule_interval")
+            self.sonarr.watched_deletion_threshold = self._convert_to_seconds(self.sonarr.watched_deletion_threshold, "sonarr.watched_deletion_threshold")
+            self.sonarr.unwatched_deletion_threshold = self._convert_to_seconds(self.sonarr.unwatched_deletion_threshold, "sonarr.unwatched_deletion_threshold")
             self.overseerr = OverseerrConfig(**config["overseerr"])
             self.plex = PlexConfig(**config["plex"])
-            self.last_watched_deletion_threshold = self._convert_to_seconds(config["last_watched_deletion_threshold"], "last_watched_deletion_threshold")
-            self.unwatched_deletion_threshold = self._convert_to_seconds(config["unwatched_deletion_threshold"], "unwatched_deletion_threshold")
             self.dry_run = config["dry_run"] in [True, "True", "true", "1"]
-            self.schedule_interval = config["schedule_interval"]
+            self.schedule_interval = self._convert_to_seconds(config["schedule_interval"], "schedule_interval")
         except KeyError as err:
             print("Error in configuration file:")
             print(err)
