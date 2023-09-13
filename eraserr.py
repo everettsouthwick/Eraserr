@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
+"""eraserr.py: A script to remove expired media from Plex, Radarr, Sonarr, and Overseerr."""
 import argparse
 from src.main import main
 
-__version__ = "1.3.0"
+__version__ = "2.0.0"
 
 def add_arguments(arg_parser: argparse.ArgumentParser):
     '''
@@ -19,10 +19,6 @@ def add_arguments(arg_parser: argparse.ArgumentParser):
     )
 
     arg_parser.add_argument("-d", "--dry-run", action="store_true", help="perform a trial run without any changes made")
-
-    arg_parser.add_argument(
-        "-s", "--schedule-interval", type=int, default=86400, help="interval between schedule runs in seconds"
-    )
 
 
 if __name__ == "__main__":

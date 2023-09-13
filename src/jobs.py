@@ -1,102 +1,132 @@
+"""
+This module contains the JobRunner class, 
+which is responsible for running the job function on a schedule.
+"""
 import time
+from collections import defaultdict
 import schedule
-import requests
-from src.overseerr import OverseerrClient
-from src.plex import PlexClient
-from src.radarr import RadarrClient
-from src.sonarr import SonarrClient
-from src.tautulli import TautulliClient
-from src.util import convert_bytes
-
+from src.clients.plex import PlexClient
+from src.clients.radarr import RadarrClient
+from src.clients.sonarr import SonarrClient
+from src.clients.overseerr import OverseerrClient
+from src.logger import logger
 
 class JobRunner:
+    """
+    Class for running the job function on a schedule.
+    """
     def __init__(self, config):
         self.config = config
-        self.overseerr = OverseerrClient(config)
+        self.dry_run = config.dry_run
+        self.schedule_interval = config.schedule_interval
         self.plex = PlexClient(config)
         self.radarr = RadarrClient(config)
         self.sonarr = SonarrClient(config)
-        self.tautulli = TautulliClient(config)
+        self.overseerr = OverseerrClient(config)
+        self.radarr_enabled = config.radarr.enabled
+        self.radarr_watched_deletion_threshold = config.radarr.watched_deletion_threshold
+        self.radarr_unwatched_deletion_threshold = config.radarr.unwatched_deletion_threshold
+        self.sonarr_enabled = config.sonarr.enabled
+        self.dynamic_load = config.sonarr.dynamic_load
+        self.sonarr_watched_deletion_threshold = config.sonarr.watched_deletion_threshold
+        self.sonarr_unwatched_deletion_threshold = config.sonarr.unwatched_deletion_threshold
+        self.overseerr_enabled = config.overseerr.enabled
+        
 
     def run(self):
-        # Run the job function immediately on first execution
-        self.job()
+        """
+        Runs the job function on a schedule.
+        """
+        self.get_and_delete_job()
+        schedule.every(self.schedule_interval).seconds.do(self.get_and_delete_job)
 
-        # Then schedule it to run subsequently every self.config.schedule_interval seconds
-        schedule.every(self.config.schedule_interval).seconds.do(self.job)
+        if self.dynamic_load.enabled:
+            self.dynamic_load_job()
+            schedule.every(self.dynamic_load.schedule_interval).seconds.do(self.dynamic_load_job)
 
         while True:
             schedule.run_pending()
             time.sleep(1)
 
-    def job(self):
+    def get_and_delete_job(self):
         """
-        This function fetches unplayed movies and TV shows and deletes them if they are eligible for deletion.
+        This function gets unplayed movies and TV shows and deletes them if they are eligible for deletion.
         """
-        print("JOB :: Starting")
+        logger.debug("[JOB] Fetch and delete job started")
 
-        total_size = self.fetch_movies()
-        if self.config.dry_run:
-            print("JOB :: DRY RUN :: Would have freed up from movies: " + str(total_size))
-        else:
-            print("JOB :: Total freed up from movies: " + str(total_size))
+        if self.radarr_enabled:
+            logger.debug("[JOB] Fetching and deleting movies")
+            self.get_and_delete_movies()
+        
+        if self.sonarr_enabled:
+            logger.debug("[JOB] Fetching and deleting series")
+            self.get_and_delete_series()
 
-        total_size = self.fetch_series()
-        if self.config.dry_run:
-            print("JOB :: DRY RUN :: Would have freed up from series: " + str(total_size))
-        else:
-            print("JOB :: Total freed up from series: " + str(total_size))
+        logger.debug("[JOB] Fetch and delete job finished")
 
-        print("JOB :: Finished")
+    def dynamic_load_job(self):
+        """
+        This function dynamically loads and unloads the Plex library based on the current time.
+        """
+        logger.debug("[JOB] Dynamic load job started")
 
-    def fetch_movies(self):
+        if self.sonarr_enabled:
+            logger.debug("[JOB] Dynamic loading series")
+            self.dynamic_load_series()
+
+        logger.debug("[JOB] Dynamic load job finished")
+            
+    def get_and_delete_movies(self):
         """
         Fetches unplayed movies and deletes them if they are eligible for deletion.
         """
-        section_ids = self.tautulli.fetch_libraries("movie")
-        all_tmdb_ids = self.tautulli.fetch_and_count_unplayed_titles(section_ids)
+        media = self.plex.get_expired_media("movie", self.radarr_watched_deletion_threshold, self.radarr_unwatched_deletion_threshold)
 
-        total_size = 0
-        for tmdb_id in all_tmdb_ids:
-            try:
-                deleted, size = self.radarr.find_and_delete_movie(tmdb_id)
-                if deleted and size is not None:
-                    total_size += size
-                    self.overseerr.find_and_delete_media(tmdb_id)
-            except requests.exceptions.RequestException as ex:
-                print(f"Error: {ex}")
-                continue
-        if self.config.plex.refresh:
-            time.sleep(10)
-            self.plex.find_and_update_library("movie")
-        else:
-            print("PLEX :: Skipping Plex library refresh")
-        self.tautulli.refresh_library(section_ids, "movie")
+        media_to_delete = {}
+        for item in media:
+            tmdb_id = next(
+                (guid.id.split("tmdb://")[1].split("?")[0] for guid in item.guids if guid.id.startswith("tmdb://")),
+                None,
+            )
+            if tmdb_id is not None:
+                media_to_delete[tmdb_id] = item.title
 
-        return str(convert_bytes(total_size))
+        media_deleted = self.radarr.get_and_delete_media(media_to_delete, self.dry_run)
+        if self.overseerr_enabled:
+            self.overseerr.get_and_delete_media(media_deleted, self.dry_run)
 
-    def fetch_series(self):
+    def get_and_delete_series(self):
         """
         Fetches unplayed TV shows and deletes them if they are eligible for deletion.
         """
-        section_ids = self.tautulli.fetch_libraries("show")
-        all_tvdb_ids = self.tautulli.fetch_and_count_unplayed_titles(section_ids)
+        media = self.plex.get_expired_media("show", self.sonarr_watched_deletion_threshold, self.sonarr_unwatched_deletion_threshold)
 
-        total_size = 0
-        for tvdb_id in all_tvdb_ids:
-            try:
-                deleted, size = self.sonarr.find_and_delete_series(tvdb_id)
-                if deleted and size is not None:
-                    total_size += size
-                    self.overseerr.find_and_delete_media(tvdb_id)
-            except requests.exceptions.RequestException as ex:
-                print(f"Error: {ex}")
-                continue
-        if self.config.plex.refresh:
-            time.sleep(10)
-            self.plex.find_and_update_library("show")
-        else:
-            print("PLEX :: Skipping Plex library refresh")
-        self.tautulli.refresh_library(section_ids, "show")
+        media_to_delete = {}
+        for item in media:
+            tvdb_id = next(
+                (guid.id.split("tvdb://")[1].split("?")[0] for guid in item.guids if guid.id.startswith("tvdb://")),
+                None,
+            )
+            if tvdb_id is not None:
+                media_to_delete[tvdb_id] = item.title
 
-        return str(convert_bytes(total_size))
+        media_deleted = self.sonarr.get_and_delete_media(media_to_delete, self.dry_run)
+        if self.overseerr_enabled:
+            self.overseerr.get_and_delete_media(media_deleted, self.dry_run)
+
+    def dynamic_load_series(self):
+        """
+        Dynamically loads and unloads TV shows based on current media consumption.
+        """
+        dynamic_media = self.plex.get_dynamic_load_media(self.dynamic_load.watched_deletion_threshold)
+
+        media_to_load = defaultdict(list)
+        for item in dynamic_media:
+            tvdb_id = next(
+                (guid.id.split("tvdb://")[1].split("?")[0] for guid in item.media.guids if guid.id.startswith("tvdb://")),
+                None,
+            )
+            if tvdb_id is not None:
+                media_to_load[tvdb_id] = item
+
+        self.sonarr.get_dynamic_load_media(media_to_load, self.dry_run)
