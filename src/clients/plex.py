@@ -79,7 +79,7 @@ class PlexClient:
         history = media.history(mindate=min_date)
         for entry in history:
             if entry.accountID != session.user.id:
-                logger.info("[PLEX] %s has been watched by a different user. It should not be unloaded.", media.grandparentTitle)
+                logger.info("[PLEX][DYNAMIC LOAD] %s has been watched by a different user. It should not be unloaded.", media.grandparentTitle)
                 return False
 
         return True
