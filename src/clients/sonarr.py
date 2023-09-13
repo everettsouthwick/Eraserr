@@ -1,8 +1,11 @@
+"""Sonarr API client."""
+from datetime import datetime
 import requests
 from src.logger import logger
 from src.util import convert_bytes
 
 class SonarrClient:
+    """Class for interacting with the Sonarr API."""
     def __init__(self, config):
         self.config = config
         self.api_key = config.sonarr.api_key
@@ -168,7 +171,7 @@ class SonarrClient:
 
     def __get_episodes_to_load_and_unload(self, series, dynamic_media):
         episodes = self.__get_media_episodes(series.get("id"))
-        filtered_episodes = [episode for episode in episodes if episode.get("seasonNumber", -1) != 0]
+        filtered_episodes = [episode for episode in episodes if episode.get("seasonNumber", -1) != 0 and episode.get("airDate") < datetime.now().isoformat()]
         sorted_episodes = sorted(filtered_episodes, key=lambda x: (x['seasonNumber'], x['episodeNumber']))
         episode_index = next((index for (index, episode) in enumerate(sorted_episodes) if episode.get("seasonNumber", 0) == dynamic_media.season and episode.get("episodeNumber", 0) == dynamic_media.episode), None)
         if episode_index is not None:
