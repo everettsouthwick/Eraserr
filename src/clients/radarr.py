@@ -18,7 +18,7 @@ class RadarrClient:
         response = requests.get(url, headers=headers, timeout=30)
         if response.status_code != 200:
             raise requests.exceptions.RequestException(f"{response.url} : {response.status_code} - {response.text}")
-            
+
         return response.json()
 
     def __get_exempt_tag_ids(self, tag_names: list):
@@ -28,12 +28,12 @@ class RadarrClient:
         response = requests.get(url, headers=headers, timeout=30)
         if response.status_code != 200:
             raise requests.exceptions.RequestException(f"{response.url} : {response.status_code} - {response.text}")
-        
+
         tags = response.json()
         tag_ids = [tag["id"] for tag in tags if tag["label"] in tag_names]
 
         return tag_ids
-    
+
     def __delete_media(self, media_id: int):
         url = f"{self.base_url}/movie/{media_id}"
         headers = {"X-Api-Key": self.api_key}
@@ -76,7 +76,7 @@ class RadarrClient:
                 if dry_run:
                     logger.info("[RADARR][DRY RUN] Would have deleted %s. Freed: %s.", movie.get("title"), convert_bytes(movie.get("sizeOnDisk", 0)))
                     continue
-                
+
                 try:
                     self.__delete_media(movie.get("id"))
                     logger.info("[RADARR] Deleted %s. Freed: %s.", movie.get("title"), convert_bytes(movie.get("sizeOnDisk", 0)))
@@ -84,7 +84,7 @@ class RadarrClient:
                     logger.error("[RADARR] Failed to delete %s. Error: %s", movie.get("title"), err)
                     continue
 
-        if dry_run:
+        if dry_run and total_size > 0:
             logger.info("[RADARR][DRY RUN] Would have total freed: %s.", convert_bytes(total_size))
         elif total_size > 0:
             logger.info("[RADARR] Total freed: %s.", convert_bytes(total_size))

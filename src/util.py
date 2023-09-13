@@ -1,3 +1,4 @@
+"""This file contains utility functions for the project."""
 def convert_bytes(num):
     """
     This function will convert bytes to MB, GB, or TB
