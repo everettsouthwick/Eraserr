@@ -1,3 +1,4 @@
+"""This module contains the Config class which is used to store the configuration values for the application."""
 import json
 import sys
 import re
@@ -6,9 +7,9 @@ from dataclasses import dataclass, field
 
 CONFIG_FILE_NAME = "config.json"
 
-
 @dataclass
 class RadarrConfig:
+    """This class is used to store the configuration values for the Radarr client."""
     enabled: bool
     api_key: str
     base_url: str
@@ -18,6 +19,7 @@ class RadarrConfig:
 
 @dataclass
 class DynamicLoad:
+    """This class is used to store the configuration values for the dynamic load feature."""
     enabled: bool
     episodes_to_load: int
     episodes_to_keep: int
@@ -26,6 +28,7 @@ class DynamicLoad:
 
 @dataclass
 class SonarrConfig:
+    """This class is used to store the configuration values for the Sonarr client."""
     enabled: bool
     api_key: str
     base_url: str
@@ -37,6 +40,7 @@ class SonarrConfig:
 
 @dataclass
 class OverseerrConfig:
+    """This class is used to store the configuration values for the Overseerr client."""
     enabled: bool
     api_key: str
     base_url: str
@@ -45,11 +49,13 @@ class OverseerrConfig:
 
 @dataclass
 class PlexConfig:
+    """This class is used to store the configuration values for the Plex client."""
     base_url: str
     token: str
 
 @dataclass
 class Config:
+    """This class is used to store the configuration values for the application."""
     plex: PlexConfig
     radarr: RadarrConfig
     sonarr: SonarrConfig
@@ -60,7 +66,6 @@ class Config:
     
 
     def __init__(self):
-        # Default values are set
         self.dry_run = True
         self.log_level = "INFO"
         self.schedule_interval = 86400
@@ -69,10 +74,8 @@ class Config:
         self.sonarr = SonarrConfig(False, "", "https://host:port/api/v3", True, [], DynamicLoad(False, 3, 3, 7776000, 600), 7776000, 2592000)
         self.overseerr = OverseerrConfig(False, "", "http://host:port/api/v1", 10)
         
-        # Read the config file
         config = self._get_config()
 
-        # Set the configuration values if provided
         try:
             self._parse_config(config)
         except TypeError as err:
@@ -81,12 +84,6 @@ class Config:
             sys.exit()
 
     def _get_config(self) -> Dict[str, Any]:
-        """
-        Reads the configuration file and returns its contents as a dictionary.
-
-        Returns:
-            A dictionary containing the configuration values.
-        """
         config = {}
         try:
             with open(CONFIG_FILE_NAME, encoding="utf-8") as file:
@@ -97,18 +94,6 @@ class Config:
         return config
 
     def _parse_config(self, config: Dict[str, Any]) -> None:
-        """
-        Parses the configuration dictionary and sets the corresponding attributes of the Config object.
-
-        Args:
-            config: A dictionary containing the configuration values.
-
-        Raises:
-            KeyError: If any required configuration keys are missing.
-            TypeError: If any of the configuration values are of the wrong type.
-            ValueError: If any of the configuration values are invalid.
-        """
-        # List of required configuration keys
         required_keys = [
             "dry_run",
             "log_level",
@@ -116,12 +101,10 @@ class Config:
             "plex"        
         ]
 
-        # Check for missing keys
         for key in required_keys:
             if key not in config:
                 raise KeyError(f"Missing required configuration key: {key}")
 
-        # Parse and validate configuration values
         try:
             self.radarr = RadarrConfig(**config["radarr"])
             self.radarr.watched_deletion_threshold = self._convert_to_seconds(self.radarr.watched_deletion_threshold, "radarr.watched_deletion_threshold")
@@ -171,7 +154,7 @@ class Config:
             pass
 
         match = re.match(r'^(\d+)([smhd])$', time.lower())
-        
+
         if not match:
             raise ValueError(f"{key_name} must be in the format of <integer><unit>. (e.g. 45s (seconds), 30m (minutes), 2h (hours), 1d (days))")
         

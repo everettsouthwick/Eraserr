@@ -1,5 +1,6 @@
 """This module is used to configure the logger for the application."""
 import logging
+from logging.handlers import RotatingFileHandler
 from src.config import Config
 
 config = Config()
@@ -7,7 +8,7 @@ config = Config()
 logger = logging.getLogger()
 logger.setLevel(logging.getLevelName(config.log_level))
 
-file_handler = logging.FileHandler('app.log')
+file_handler = RotatingFileHandler('app.log', maxBytes=10000, backupCount=5)
 stream_handler = logging.StreamHandler()
 
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')

@@ -40,13 +40,14 @@ class OverseerrClient:
         response = requests.delete(url, headers=headers, timeout=30)
         if response.status_code != 204:
             raise requests.exceptions.RequestException(f"{response.url} : {response.status_code} - {response.text}")
-        
+
     def get_and_delete_media(self, media_to_delete: dict, dry_run: bool = False):
         """
         Gets and deletes media with the given IDs from the Overseerr API.
 
         Args:
-            media_to_delete: A dictionary where the key is the ID of the media to delete and the value is the title of the media.
+            media_to_delete: A dictionary where the key is the ID of the media to delete 
+            and the value is the title of the media.
 
         Raises:
             requests.exceptions.RequestException: If the API request fails.

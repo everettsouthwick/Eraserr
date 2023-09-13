@@ -3,8 +3,8 @@ This module contains the JobRunner class,
 which is responsible for running the job function on a schedule.
 """
 import time
-import schedule
 from collections import defaultdict
+import schedule
 from src.clients.plex import PlexClient
 from src.clients.radarr import RadarrClient
 from src.clients.sonarr import SonarrClient
@@ -40,9 +40,9 @@ class JobRunner:
         self.get_and_delete_job()
         schedule.every(self.schedule_interval).seconds.do(self.get_and_delete_job)
 
-        # if self.dynamic_load.enabled:
-        #     self.dynamic_load_job()
-        #     schedule.every(self.dynamic_load.schedule_interval).seconds.do(self.dynamic_load_job)
+        if self.dynamic_load.enabled:
+            self.dynamic_load_job()
+            schedule.every(self.dynamic_load.schedule_interval).seconds.do(self.dynamic_load_job)
 
         while True:
             schedule.run_pending()
@@ -75,15 +75,7 @@ class JobRunner:
             self.dynamic_load_series()
 
         logger.debug("[JOB] Dynamic load job finished")
-    
-    # def fetch_and_load_episodes(self):
-    #     series = self.plex.get_currently_playing()
-    #     for show in series:
-    #         self.sonarr.find_and_load_episodes(show.tvdb_id, show.season, show.episode)
-
-    #     return 0
             
-
     def get_and_delete_movies(self):
         """
         Fetches unplayed movies and deletes them if they are eligible for deletion.
@@ -122,17 +114,19 @@ class JobRunner:
         if self.overseerr_enabled:
             self.overseerr.get_and_delete_media(media_deleted, self.dry_run)
 
-    # def dynamic_load_series(self):
-    #     media = self.plex.get_media_to_unload(self.dynamic_load.watched_deletion_threshold)
+    def dynamic_load_series(self):
+        """
+        Dynamically loads and unloads TV shows based on current media consumption.
+        """
+        dynamic_media = self.plex.get_dynamic_load_media(self.dynamic_load.watched_deletion_threshold)
 
-    #     media_to_delete = defaultdict(list)
-    #     for key, episodes in media.items():
-    #         for episode in episodes:
-    #             tvdb_id = next(
-    #                 (guid.id.split("tvdb://")[1].split("?")[0] for guid in episode.guids if guid.id.startswith("tvdb://")),
-    #                 None,
-    #             )
-    #             if tvdb_id is not None:
-    #                 media_to_delete[key].append(tvdb_id)
+        media_to_load = defaultdict(list)
+        for item in dynamic_media:
+            tvdb_id = next(
+                (guid.id.split("tvdb://")[1].split("?")[0] for guid in item.media.guids if guid.id.startswith("tvdb://")),
+                None,
+            )
+            if tvdb_id is not None:
+                media_to_load[tvdb_id] = item
 
-    #     media_deleted = self.sonarr.get_and_delete_media_episodes(media_to_delete, self.dry_run)
+        self.sonarr.get_dynamic_load_media(media_to_load, self.dry_run)
