@@ -2,6 +2,7 @@
 import time
 from datetime import datetime, timedelta
 from plexapi.server import PlexServer
+from retry import retry
 from src.logger import logger
 from src.models.dynamicmedia import DynamicMedia
 
@@ -84,6 +85,7 @@ class PlexClient:
 
         return True
 
+    @retry(tries=3, delay=5)
     def get_expired_media(self, section_type, watched_media_expiry_seconds, unwatched_media_expiry_seconds):
         """
         Retrieves a list of expired media.
@@ -106,6 +108,7 @@ class PlexClient:
 
         return expired_media
 
+    @retry(tries=3, delay=5)
     def get_dynamic_load_media(self, watched_media_expiry_seconds):
         """
         Retrieves a list of media that should be dynamically loaded.
