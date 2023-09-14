@@ -22,6 +22,12 @@ This guide contains all the information you need to configure `Eraserr` using a 
   - [Base URL](#sonarr-base-url)
   - [Monitor Continuing Series](#sonarr-monitor-continuing-series)
   - [Dynamic Load](#sonarr-dynamic-load)
+    - [Enabled](#enabled)
+    - [Episodes to Load](#episodes-to-load)
+    - [Episodes to Keep](#episodes-to-keep)
+    - [Watched Deletion Threshold](#watched-deletion-threshold)
+    - [Schedule Interval](#schedule-interval)
+    - [Additional Information](#additional-information)
   - [Exempt Tag Names](#sonarr-exempt-tag-names)
   - [Watched Deletion Threshold](#sonarr-watched-deletion-threshold)
   - [Unwatched Deletion Threshold](#sonarr-unwatched-deletion-threshold)
@@ -143,7 +149,30 @@ Update the `base_url` with your Sonarr base URL.
 Set to `true` if you want to monitor continuing series instead of deleting it from Sonarr so that new seasons are fetched.
 
 ### Sonarr Dynamic Load
-Configure the dynamic load settings as per your requirements. You can set the number of episodes to load, keep, the watched deletion threshold, and the schedule interval.
+
+Configure the dynamic load settings to efficiently manage your media storage on the Plex server. This feature preloads episodes ahead of the current viewing point and deletes watched episodes, saving substantial storage space. It considers the viewing patterns of multiple users to prevent premature deletion of episodes being watched concurrently.
+
+Here is an example of `episodes_to_load` = 3 and `episodes_to_keep` = 2 and you are viewing the first season. The first number of `episodes_to_keep` of a series (Season 1) will _always_ be kept. This means that deletion will only kick in when you reach E6 because E1 and E2 are protected, and E4 and E5 are the 2 episodes prior to E6, so only E3 is eligible for deletion in that scenario.
+
+![image](https://github.com/everettsouthwick/Eraserr/assets/8216991/2e6f972c-de55-48a6-afb0-be1a49499f66)
+
+#### Enabled
+Toggle this setting to activate or deactivate the dynamic load feature.
+
+#### Episodes to Load
+Specify the number of future episodes to preload. When a user starts watching a TV show, it will download the specified number of episodes ahead of where they are currently watching.
+
+#### Episodes to Keep
+Specify the minimum number of episodes to retain. When a user starts watching a TV show, it will delete the specified number of episodes behind of where they are currently watching.
+
+#### Watched Deletion Threshold
+Set the timeframe to consider multiple users' viewing patterns before deleting any episodes, preventing the removal of episodes being watched by different users within the specified period. The value should be in the format `<integer><d/h/m/s>` (days, hours, minutes, seconds).
+
+#### Schedule Interval
+Set the interval at which dynamic load runs by replacing the `schedule_interval` value. The value should be in the format `<integer><d/h/m/s>` (days, hours, minutes, seconds).
+
+#### Additional Information
+Utilize the exempt tags to exclude specific series from dynamic loading, ensuring they remain available for repeated viewing.
 
 ### Sonarr Exempt Tag Names
 Set tag names to exempt from automatic deletion by updating the `exempt_tag_names` array.
