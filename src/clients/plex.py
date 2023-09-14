@@ -14,7 +14,7 @@ class PlexClient:
         self.config = config
         self.base_url = config.plex.base_url
         self.token = config.plex.token
-        self.plex = PlexServer(self.base_url, self.token)
+        self.plex = PlexServer(self.base_url, self.token, timeout=60)
 
     def __get_media(self, section_type):
         sections = self.__get_sections_by_type(section_type)
