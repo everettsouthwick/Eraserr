@@ -1,6 +1,7 @@
 """Sonarr API client."""
 from datetime import datetime
 import requests
+from retry import retry
 from src.logger import logger
 from src.util import convert_bytes
 
@@ -175,8 +176,15 @@ class SonarrClient:
         sorted_episodes = sorted(filtered_episodes, key=lambda x: (x['seasonNumber'], x['episodeNumber']))
         episode_index = next((index for (index, episode) in enumerate(sorted_episodes) if episode.get("seasonNumber", 0) == dynamic_media.season and episode.get("episodeNumber", 0) == dynamic_media.episode), None)
         if episode_index is not None:
-            episodes_to_load = sorted_episodes[episode_index+1:episode_index+1+self.dynamic_load.episodes_to_load]
-            episodes_to_unload = sorted_episodes[self.dynamic_load.episodes_to_keep:episode_index-self.dynamic_load.episodes_to_keep]
+            load_index_start = episode_index + 1
+            load_index_end = episode_index + self.dynamic_load.episodes_to_keep + 1
+
+            episodes_to_load = sorted_episodes[load_index_start:load_index_end]
+
+            unload_index_start = self.dynamic_load.episodes_to_keep
+            unload_index_end = episode_index - self.dynamic_load.episodes_to_keep
+
+            episodes_to_unload = sorted_episodes[unload_index_start:unload_index_end] if unload_index_end > 0 else []
         return episodes_to_load, episodes_to_unload
 
     def __handle_episode_loading(self, episodes_to_load, series, dry_run):
@@ -238,6 +246,7 @@ class SonarrClient:
         size_on_disk = self.__handle_episode_unloading(episodes_to_unload, series, dry_run)
         return size_on_disk
 
+    @retry(tries=3, delay=5)
     def get_and_delete_media(self, media_to_delete: dict, dry_run: bool = False):
         """
         Gets and deletes media with the given ID from the Sonarr API.
@@ -280,6 +289,7 @@ class SonarrClient:
 
         return media_to_delete
 
+    @retry(tries=3, delay=5)
     def get_dynamic_load_media(self, media_to_load: dict, dry_run: bool = False):
         """
         Gets and deletes media with the given ID from the Sonarr API.

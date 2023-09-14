@@ -1,5 +1,6 @@
 """Module for interacting with the Overseerr API."""
 import requests
+from retry import retry
 from src.logger import logger
 
 class OverseerrClient:
@@ -41,6 +42,7 @@ class OverseerrClient:
         if response.status_code != 204:
             raise requests.exceptions.RequestException(f"{response.url} : {response.status_code} - {response.text}")
 
+    @retry(tries=3, delay=5)
     def get_and_delete_media(self, media_to_delete: dict, dry_run: bool = False):
         """
         Gets and deletes media with the given IDs from the Overseerr API.

@@ -1,5 +1,6 @@
 """Radarr API client."""
 import requests
+from retry import retry
 from src.logger import logger
 from src.util import convert_bytes
 
@@ -43,6 +44,7 @@ class RadarrClient:
         if response.status_code != 200:
             raise requests.exceptions.RequestException(f"{response.url} : {response.status_code} - {response.text}")
 
+    @retry(tries=3, delay=5)
     def get_and_delete_media(self, media_to_delete: dict, dry_run: bool = False):
         """
         Gets and deletes media with the given ID from the Radarr API.
