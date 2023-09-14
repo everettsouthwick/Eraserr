@@ -179,12 +179,12 @@ class SonarrClient:
             load_index_start = episode_index + 1
             load_index_end = episode_index + self.dynamic_load.episodes_to_keep + 1
 
-            episodes_to_load = sorted_episodes[load_index_start:load_index_end]
+            episodes_to_load = sorted_episodes[load_index_start:load_index_end] if load_index_end >= load_index_start else []
 
             unload_index_start = self.dynamic_load.episodes_to_keep
             unload_index_end = episode_index - self.dynamic_load.episodes_to_keep
 
-            episodes_to_unload = sorted_episodes[unload_index_start:unload_index_end] if unload_index_end > 0 else []
+            episodes_to_unload = sorted_episodes[unload_index_start:unload_index_end] if unload_index_end >= unload_index_start else []
         return episodes_to_load, episodes_to_unload
 
     def __handle_episode_loading(self, episodes_to_load, series, dry_run):
