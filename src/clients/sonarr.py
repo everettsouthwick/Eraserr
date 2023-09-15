@@ -120,12 +120,12 @@ class SonarrClient:
     def __handle_ended_series(self, series, dry_run: bool = False):
         size_on_disk = series.get("statistics", {}).get("sizeOnDisk", 0)
         if dry_run:
-            logger.info("[SONARR][DRY RUN] Would have deleted %s. Freed: %s.", series.get("title"), convert_bytes(size_on_disk))
+            logger.info("[SONARR][DRY RUN] Would have deleted %s. Space freed: %s.", series.get("title"), convert_bytes(size_on_disk))
             return size_on_disk
         
         try:
             self.__delete_media(series.get("id"))
-            logger.info("[SONARR] Deleted %s. Freed: %s.", series.get("title"), convert_bytes(size_on_disk))
+            logger.info("[SONARR] Deleted %s. Space freed: %s.", series.get("title"), convert_bytes(size_on_disk))
         except requests.exceptions.RequestException as err:
             logger.error("[SONARR] Failed to delete %s. Error: %s", series.get("title"), err)
 
@@ -263,6 +263,8 @@ class SonarrClient:
         """
         media = self.__get_media()
         exempt_tag_ids = self.__get_exempt_tag_ids(self.exempt_tag_names)
+        original_deletion_count = len(media_to_delete)
+        exempt_count = 0
 
         total_size = 0
 
@@ -272,6 +274,7 @@ class SonarrClient:
 
             if any(tag in exempt_tag_ids for tag in series.get("tags", [])):
                 media_to_delete.pop(str(series.get("tvdbId")))
+                exempt_count += 1
                 logger.info("[SONARR] Skipping %s because it is exempt.", series.get("title"))
                 continue
 
@@ -282,10 +285,10 @@ class SonarrClient:
                 else:
                     total_size += self.__handle_continuing_series(series, dry_run)
 
-        if dry_run and total_size > 0:
-            logger.info("[SONARR][DRY RUN] Would have total freed: %s.", convert_bytes(total_size))
-        elif total_size > 0:
-            logger.info("[SONARR] Total freed: %s.", convert_bytes(total_size))
+        if dry_run:
+            logger.info("[SONARR][DRY_RUN] Total series: %s. Series eligible for deletion: %s. Series deleted: %s. Series exempt: %s. Total space freed: %s.", len(media), original_deletion_count, len(media_to_delete), exempt_count, convert_bytes(total_size))
+        else:
+            logger.info("[SONARR] Total series: %s. Series eligible for deletion: %s. Series deleted: %s. Series exempt: %s. Total space freed: %s.", len(media), original_deletion_count, len(media_to_delete), exempt_count, convert_bytes(total_size))
 
         return media_to_delete
 
@@ -324,8 +327,8 @@ class SonarrClient:
                     total_size += self.__handle_dynamic_load(series, dynamic_media, dry_run)
 
         if dry_run and total_size > 0:
-            logger.info("[SONARR][DYNAMIC LOAD][DRY RUN] Would have total freed: %s.", convert_bytes(total_size))
+            logger.info("[SONARR][DYNAMIC LOAD][DRY RUN] Would have total space freed: %s.", convert_bytes(total_size))
         elif total_size > 0:
-            logger.info("[SONARR][DYNAMIC LOAD] Total freed: %s.", convert_bytes(total_size))
+            logger.info("[SONARR][DYNAMIC LOAD] Total space freed: %s.", convert_bytes(total_size))
 
         return media_to_load

@@ -58,11 +58,11 @@ class PlexClient:
 
         return episodes_to_check
 
-    def __media_is_expired(self, media, watched_media_expiry_seconds, unwatched_media_expiry_seconds):
+    def __media_is_expired(self, media, watched_media_expiry_seconds, unwatched_media_expiry_seconds, schedule_interval):
         current_time = time.time()
         watched_media_expiry_date = datetime.fromtimestamp(current_time - watched_media_expiry_seconds)
         unwatched_media_expiry_date = datetime.fromtimestamp(current_time - unwatched_media_expiry_seconds)
-        min_date = datetime.now() - timedelta(seconds=max(watched_media_expiry_seconds, unwatched_media_expiry_seconds))
+        min_date = datetime.now() - timedelta(seconds=max(watched_media_expiry_seconds, unwatched_media_expiry_seconds)) - timedelta(seconds=schedule_interval * 3)
 
         added_at = media.addedAt if media.addedAt else datetime.fromtimestamp(0)
         if media.type == "show":
@@ -70,7 +70,12 @@ class PlexClient:
         history = media.history(mindate=min_date)
         watched_date = max(entry.viewedAt for entry in history) if history else None
 
-        if added_at < unwatched_media_expiry_date and (watched_date is None or watched_date < watched_media_expiry_date):
+        if watched_date is None and added_at < unwatched_media_expiry_date:
+            logger.info("[PLEX] %s is unwatched and expired. Added at %s. Expired at %s.", media.title, added_at, datetime.fromtimestamp(added_at.timestamp() + unwatched_media_expiry_seconds))
+            return True
+
+        if watched_date is not None and watched_date < watched_media_expiry_date:
+            logger.info("[PLEX] %s is watched and expired. Added at %s. Watched at %s. Expired at %s.", media.title, added_at, watched_date, datetime.fromtimestamp(watched_date.timestamp() + watched_media_expiry_seconds))
             return True
         
         return False
@@ -86,7 +91,7 @@ class PlexClient:
         return True
 
     @retry(tries=3, delay=5)
-    def get_expired_media(self, section_type, watched_media_expiry_seconds, unwatched_media_expiry_seconds):
+    def get_expired_media(self, section_type, watched_media_expiry_seconds, unwatched_media_expiry_seconds, schedule_interval):
         """
         Retrieves a list of expired media.
         
@@ -102,7 +107,7 @@ class PlexClient:
         expired_media = []
 
         for item in media:
-            if self.__media_is_expired(item, watched_media_expiry_seconds, unwatched_media_expiry_seconds):
+            if self.__media_is_expired(item, watched_media_expiry_seconds, unwatched_media_expiry_seconds, schedule_interval):
                 item.reload()
                 expired_media.append(item)
 

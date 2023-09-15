@@ -80,7 +80,7 @@ class JobRunner:
         """
         Fetches unplayed movies and deletes them if they are eligible for deletion.
         """
-        media = self.plex.get_expired_media("movie", self.radarr_watched_deletion_threshold, self.radarr_unwatched_deletion_threshold)
+        media = self.plex.get_expired_media("movie", self.radarr_watched_deletion_threshold, self.radarr_unwatched_deletion_threshold, self.schedule_interval)
 
         media_to_delete = {}
         for item in media:
@@ -99,7 +99,7 @@ class JobRunner:
         """
         Fetches unplayed TV shows and deletes them if they are eligible for deletion.
         """
-        media = self.plex.get_expired_media("show", self.sonarr_watched_deletion_threshold, self.sonarr_unwatched_deletion_threshold)
+        media = self.plex.get_expired_media("show", self.sonarr_watched_deletion_threshold, self.sonarr_unwatched_deletion_threshold, self.schedule_interval)
 
         media_to_delete = {}
         for item in media:

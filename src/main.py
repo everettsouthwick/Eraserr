@@ -1,6 +1,7 @@
 """Main module for the application."""
 from src.config import Config
 from src.jobs import JobRunner
+from src.logger import logger
 
 
 def main(args):
@@ -13,6 +14,7 @@ def main(args):
     Returns:
         None
     """
+    logger.info("Starting Eraserr")
     config = Config()
 
     if args.dry_run:
