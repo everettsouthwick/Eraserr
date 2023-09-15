@@ -36,6 +36,11 @@ This guide contains all the information you need to configure `Eraserr` using a 
   - [API Key](#overseerr-api-key)
   - [Base URL](#overseerr-base-url)
   - [Fetch Limit](#overseerr-fetch-limit)
+- [Experimental](#experimental)
+  - [Free Space Configuration](#free-space-configuration)
+    - [Enabled](#free-space-enabled)
+    - [Minimum Free Space Percentage](#minimum-free-space-percentage)
+    - [Path](#path)
 
 ## General Settings
 
@@ -205,3 +210,45 @@ Update the `base_url` with your Overseerr base URL.
 
 ### Overseerr Fetch Limit
 Set the number of results to fetch from Overseerr by replacing the `fetch_limit` value.
+
+## Experimental
+
+The experimental section contains configurations that are in the testing phase. These settings may be subject to changes and updates. Use them at your own risk.
+
+### Free Space Configuration
+
+```json
+"experimental": {
+    "free_space": {
+        "enabled": false,
+        "minimum_free_space_percentage": 20,
+        "path": "/mnt/local/Media"
+    }
+}
+```
+
+#### Enabled
+
+```json
+"enabled": false
+```
+
+Toggle this setting to enable or disable the free space feature. When enabled, the program will monitor the specified path to ensure that the minimum free space threshold is maintained.
+
+#### Minimum Free Space
+
+```json
+"minimum_free_space_percentage": 20
+```
+
+Define the minimum free space as a percentage of the total space that should be maintained in the specified path. The program will attempt to free up space if the available space falls below this threshold. The value should be between 0 and 100, representing the percentage of free space to maintain.
+
+#### Path
+
+```json
+"path": "/mnt/local/Media"
+```
+
+Specify the path that should be monitored for free space. Ensure to update this with the correct path where your media files are stored.
+
+**Note**: This feature is experimental and might not work as expected in all scenarios. It is recommended to use it with caution and monitor its behavior closely to prevent any unintended data loss.

@@ -56,7 +56,7 @@ class OverseerrConfig:
 class FreeSpace:
     """This class is used to store the configuration values for the free space feature."""
     enabled: bool
-    minimum_free_space: int
+    minimum_free_space_percentage: int
     path: str
 
 @dataclass

@@ -45,7 +45,7 @@
     "experimental": {
         "free_space": {
             "enabled": false,
-            "minimum_free_space": 20,
+            "minimum_free_space_percentage": 20,
             "path": "/mnt/local/Media"
         }
     }

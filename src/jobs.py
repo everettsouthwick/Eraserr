@@ -42,8 +42,8 @@ class JobRunner:
         total, used, free = shutil.disk_usage(self.config.experimental.free_space.path)
         free_space_percentage = round(free / total * 100)
         logger.info("[JOB][FREE SPACE] Total: %s. Used: %s. Free: %s. Free space percentage: %d%%.", convert_bytes(total), convert_bytes(used), convert_bytes(free), free_space_percentage)
-        if free_space_percentage < self.config.experimental.free_space.minimum_free_space:
-            logger.info("[JOB][FREE SPACE] Free space is below the minimum threshold of %d%%.", self.config.experimental.free_space.minimum_free_space)
+        if free_space_percentage < self.config.experimental.free_space.minimum_free_space_percentage:
+            logger.info("[JOB][FREE SPACE] Free space is below the minimum threshold of %d%%.", self.config.experimental.free_space.minimum_free_space_percentage)
             return True
 
         return False
