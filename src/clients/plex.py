@@ -2,6 +2,7 @@
 import time
 from datetime import datetime, timedelta
 from plexapi.server import PlexServer
+from plexapi.exceptions import NotFound
 from retry import retry
 from src.logger import logger
 from src.models.dynamicmedia import DynamicMedia
@@ -35,10 +36,13 @@ class PlexClient:
     def __get_series_by_guid(self, series_guid):
         sections = self.__get_sections_by_type("show")
         for section in sections:
-            series = section.getGuid(series_guid)
-            if series:
-                return series
-   
+            try:
+                series = section.getGuid(series_guid)
+                if series:
+                    return series
+            except NotFound:
+                continue
+
         return None
 
     def __get_episodes_prior_to_session(self, session):
@@ -129,6 +133,9 @@ class PlexClient:
 
         for session in sessions:
             series = self.__get_series_by_guid(session.grandparentGuid)
+            if not series:
+                continue
+
             unload_media = True
             current_season = session.parentIndex
             current_episode = session.index
