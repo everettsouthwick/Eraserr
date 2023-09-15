@@ -118,35 +118,14 @@ class Config:
                 raise KeyError(f"Missing required configuration key: {key}")
 
         try:
-            self.dry_run = config["dry_run"] in [True, "True", "true", "1"]
-            self.log_level = config["log_level"]
-            self.schedule_interval = self._convert_to_seconds(config["schedule_interval"], "schedule_interval")
-            self.plex = PlexConfig(**config["plex"])
-            self.radarr = RadarrConfig(**config["radarr"])
-            self.radarr.watched_deletion_threshold = self._convert_to_seconds(self.radarr.watched_deletion_threshold, "radarr.watched_deletion_threshold")
-            self.radarr.unwatched_deletion_threshold = self._convert_to_seconds(self.radarr.unwatched_deletion_threshold, "radarr.unwatched_deletion_threshold")
-            self.sonarr = SonarrConfig(**config["sonarr"])
-            sonarr_config = config["sonarr"].copy()
-            dynamic_load_config = sonarr_config.pop("dynamic_load", None)
-            self.sonarr = SonarrConfig(**sonarr_config, dynamic_load=DynamicLoad(**dynamic_load_config))
-            self.sonarr.dynamic_load.schedule_interval = self._convert_to_seconds(self.sonarr.dynamic_load.schedule_interval, "sonarr.dynamic_load.schedule_interval")
-            self.sonarr.dynamic_load.watched_deletion_threshold = self._convert_to_seconds(self.sonarr.dynamic_load.watched_deletion_threshold, "sonarr.dynamic_load.watched_deletion_threshold")
-            self.sonarr.watched_deletion_threshold = self._convert_to_seconds(self.sonarr.watched_deletion_threshold, "sonarr.watched_deletion_threshold")
-            self.sonarr.unwatched_deletion_threshold = self._convert_to_seconds(self.sonarr.unwatched_deletion_threshold, "sonarr.unwatched_deletion_threshold")
-            self.overseerr = OverseerrConfig(**config["overseerr"])
-            self.experimental = Experimental(**config["experimental"])
-            experimental_config = config["experimental"].copy()
-            free_space_config = experimental_config.pop("free_space", None)
-            self.experimental = Experimental(**experimental_config, free_space=FreeSpace(**free_space_config))
-
-        except KeyError as err:
-            print("Error in configuration file:")
-            print(err)
-            sys.exit()
-        except TypeError as err:
-            print("Error in configuration file:")
-            print(err)
-            sys.exit()
+            self.dry_run = config.get("dry_run", True)
+            self.log_level = config.get("log_level", "INFO")
+            self.schedule_interval = self._convert_to_seconds(config.get("schedule_interval", "86400"), "schedule_interval")
+            self.plex = PlexConfig(**config.get("plex", {}))
+            self.radarr = RadarrConfig(**config.get("radarr", {}))
+            self.sonarr = SonarrConfig(**config.get("sonarr", {}))
+            self.overseerr = OverseerrConfig(**config.get("overseerr", {}))
+            self.experimental = Experimental(**config.get("experimental", {}))
         except ValueError as err:
             print("Error in configuration file:")
             print(err)
@@ -168,7 +147,7 @@ class Config:
         # If the time is already an integer, return it
         try:
             return int(time)
-        except:
+        except ValueError:
             pass
 
         match = re.match(r'^(\d+)([smhd])$', time.lower())
