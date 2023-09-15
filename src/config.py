@@ -8,6 +8,12 @@ from dataclasses import dataclass, field
 CONFIG_FILE_NAME = "config.json"
 
 @dataclass
+class PlexConfig:
+    """This class is used to store the configuration values for the Plex client."""
+    base_url: str
+    token: str
+
+@dataclass
 class RadarrConfig:
     """This class is used to store the configuration values for the Radarr client."""
     enabled: bool
@@ -46,12 +52,17 @@ class OverseerrConfig:
     base_url: str
     fetch_limit: int
 
+@dataclass
+class FreeSpace:
+    """This class is used to store the configuration values for the free space feature."""
+    enabled: bool
+    minimum_free_space: int
+    path: str
 
 @dataclass
-class PlexConfig:
-    """This class is used to store the configuration values for the Plex client."""
-    base_url: str
-    token: str
+class Experimental:
+    """This class is used to store the configuration values for the experimental features."""
+    free_space: FreeSpace = field(default_factory=FreeSpace)
 
 @dataclass
 class Config:
@@ -73,6 +84,7 @@ class Config:
         self.radarr = RadarrConfig(False, "", "https://host:port/api/v3", [], 7776000, 2592000)
         self.sonarr = SonarrConfig(False, "", "https://host:port/api/v3", True, [], DynamicLoad(False, 3, 3, 7776000, 600), 7776000, 2592000)
         self.overseerr = OverseerrConfig(False, "", "http://host:port/api/v1", 10)
+        self.experimental = Experimental(FreeSpace(False, "", 0))
         
         config = self._get_config()
 
@@ -106,6 +118,10 @@ class Config:
                 raise KeyError(f"Missing required configuration key: {key}")
 
         try:
+            self.dry_run = config["dry_run"] in [True, "True", "true", "1"]
+            self.log_level = config["log_level"]
+            self.schedule_interval = self._convert_to_seconds(config["schedule_interval"], "schedule_interval")
+            self.plex = PlexConfig(**config["plex"])
             self.radarr = RadarrConfig(**config["radarr"])
             self.radarr.watched_deletion_threshold = self._convert_to_seconds(self.radarr.watched_deletion_threshold, "radarr.watched_deletion_threshold")
             self.radarr.unwatched_deletion_threshold = self._convert_to_seconds(self.radarr.unwatched_deletion_threshold, "radarr.unwatched_deletion_threshold")
@@ -118,9 +134,11 @@ class Config:
             self.sonarr.watched_deletion_threshold = self._convert_to_seconds(self.sonarr.watched_deletion_threshold, "sonarr.watched_deletion_threshold")
             self.sonarr.unwatched_deletion_threshold = self._convert_to_seconds(self.sonarr.unwatched_deletion_threshold, "sonarr.unwatched_deletion_threshold")
             self.overseerr = OverseerrConfig(**config["overseerr"])
-            self.plex = PlexConfig(**config["plex"])
-            self.dry_run = config["dry_run"] in [True, "True", "true", "1"]
-            self.schedule_interval = self._convert_to_seconds(config["schedule_interval"], "schedule_interval")
+            self.experimental = Experimental(**config["experimental"])
+            experimental_config = config["experimental"].copy()
+            free_space_config = experimental_config.pop("free_space", None)
+            self.experimental = Experimental(**experimental_config, free_space=FreeSpace(**free_space_config))
+
         except KeyError as err:
             print("Error in configuration file:")
             print(err)

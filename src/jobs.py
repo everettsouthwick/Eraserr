@@ -3,12 +3,14 @@ This module contains the JobRunner class,
 which is responsible for running the job function on a schedule.
 """
 import time
+import shutil
 from collections import defaultdict
 import schedule
 from src.clients.plex import PlexClient
 from src.clients.radarr import RadarrClient
 from src.clients.sonarr import SonarrClient
 from src.clients.overseerr import OverseerrClient
+from src.util import convert_bytes
 from src.logger import logger
 
 class JobRunner:
@@ -31,7 +33,20 @@ class JobRunner:
         self.sonarr_watched_deletion_threshold = config.sonarr.watched_deletion_threshold
         self.sonarr_unwatched_deletion_threshold = config.sonarr.unwatched_deletion_threshold
         self.overseerr_enabled = config.overseerr.enabled
-        
+        self.free_space = config.experimental.free_space
+
+    def __free_space_below_minimum(self):
+        """
+        Checks the free space on the drive where the media is stored.
+        """
+        total, used, free = shutil.disk_usage(self.config.experimental.free_space.path)
+        free_space_percentage = round(free / total * 100)
+        logger.info("[FREE SPACE] Total: %s. Used: %s. Free: %s. Free space percentage: %d%%.", convert_bytes(total), convert_bytes(used), convert_bytes(free), free_space_percentage)
+        if free_space_percentage < self.config.experimental.free_space.minimum_free_space:
+            logger.info("[FREE SPACE] Free space is below the minimum threshold of %d%%.", self.config.experimental.free_space.minimum_free_space)
+            return True
+
+        return False
 
     def run(self):
         """
@@ -54,6 +69,10 @@ class JobRunner:
         """
         logger.debug("[JOB] Fetch and delete job started")
 
+        if self.free_space.enabled and not self.__free_space_below_minimum():
+            logger.info("[JOB] Free space is above the minimum threshold. Skipping job.")
+            return
+
         if self.radarr_enabled:
             logger.debug("[JOB] Fetching and deleting movies")
             self.get_and_delete_movies()
@@ -70,12 +89,16 @@ class JobRunner:
         """
         logger.debug("[JOB] Dynamic load job started")
 
+        if self.free_space.enabled and not self.__free_space_below_minimum():
+            logger.info("[JOB] Free space is above the minimum threshold. Skipping job.")
+            return
+
         if self.sonarr_enabled:
             logger.debug("[JOB] Dynamic loading series")
             self.dynamic_load_series()
 
         logger.debug("[JOB] Dynamic load job finished")
-            
+
     def get_and_delete_movies(self):
         """
         Fetches unplayed movies and deletes them if they are eligible for deletion.
