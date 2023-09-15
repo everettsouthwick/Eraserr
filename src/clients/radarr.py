@@ -61,6 +61,8 @@ class RadarrClient:
         """
         media = self.__get_media()
         exempt_tag_ids = self.__get_exempt_tag_ids(self.exempt_tag_names)
+        original_deletion_count = len(media_to_delete)
+        exempt_count = 0
 
         total_size = 0
 
@@ -70,25 +72,26 @@ class RadarrClient:
 
             if any(tag in exempt_tag_ids for tag in movie.get("tags", [])):
                 media_to_delete.pop(str(movie.get("tmdbId")))
+                exempt_count += 1
                 logger.info("[RADARR] Skipping %s because it is exempt.", movie.get("title"))
                 continue
 
             if movie.get("id") is not None:
                 total_size += movie.get("sizeOnDisk", 0)
                 if dry_run:
-                    logger.info("[RADARR][DRY RUN] Would have deleted %s. Freed: %s.", movie.get("title"), convert_bytes(movie.get("sizeOnDisk", 0)))
+                    logger.info("[RADARR][DRY RUN] Would have deleted %s. Space freed: %s.", movie.get("title"), convert_bytes(movie.get("sizeOnDisk", 0)))
                     continue
 
                 try:
                     self.__delete_media(movie.get("id"))
-                    logger.info("[RADARR] Deleted %s. Freed: %s.", movie.get("title"), convert_bytes(movie.get("sizeOnDisk", 0)))
+                    logger.info("[RADARR] Deleted %s. Space freed: %s.", movie.get("title"), convert_bytes(movie.get("sizeOnDisk", 0)))
                 except requests.exceptions.RequestException as err:
                     logger.error("[RADARR] Failed to delete %s. Error: %s", movie.get("title"), err)
                     continue
 
-        if dry_run and total_size > 0:
-            logger.info("[RADARR][DRY RUN] Would have total freed: %s.", convert_bytes(total_size))
-        elif total_size > 0:
-            logger.info("[RADARR] Total freed: %s.", convert_bytes(total_size))
+        if dry_run:
+            logger.info("[RADARR][DRY RUN] Total movies: %s. Movies eligible for deletion: %s. Movies deleted: %s. Movies exempt: %s. Total space freed: %s.", len(media), original_deletion_count, len(media_to_delete), exempt_count, convert_bytes(total_size))
+        else:
+            logger.info("[RADARR] Total movies: %s. Movies eligible for deletion: %s. Movies deleted: %s. Movies exempt: %s. Total space freed: %s.\n", len(media), original_deletion_count, len(media_to_delete), exempt_count, convert_bytes(total_size))
 
         return media_to_delete
