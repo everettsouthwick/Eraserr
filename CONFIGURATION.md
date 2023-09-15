@@ -38,7 +38,7 @@ This guide contains all the information you need to configure `Eraserr` using a 
   - [Fetch Limit](#overseerr-fetch-limit)
 - [Experimental](#experimental)
   - [Free Space Configuration](#free-space-configuration)
-    - [Enabled](#free-space-enabled)
+    - [Enabled](#enabled-1)
     - [Minimum Free Space Percentage](#minimum-free-space-percentage)
     - [Path](#path)
 
@@ -235,7 +235,7 @@ The experimental section contains configurations that are in the testing phase. 
 
 Toggle this setting to enable or disable the free space feature. When enabled, the program will monitor the specified path to ensure that the minimum free space threshold is maintained.
 
-#### Minimum Free Space
+#### Minimum Free Space Percentage
 
 ```json
 "minimum_free_space_percentage": 20
