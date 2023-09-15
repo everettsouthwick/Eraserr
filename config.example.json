@@ -41,5 +41,12 @@
         "api_key": "",
         "base_url": "http://host:port/api/v1",
         "fetch_limit": 20
+    },
+    "experimental": {
+        "free_space": {
+            "enabled": false,
+            "minimum_free_space_percentage": 20,
+            "path": "/mnt/local/Media"
+        }
     }
 }
