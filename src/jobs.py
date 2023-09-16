@@ -10,7 +10,7 @@ from src.clients.plex import PlexClient
 from src.clients.radarr import RadarrClient
 from src.clients.sonarr import SonarrClient
 from src.clients.overseerr import OverseerrClient
-from src.util import convert_bytes
+from src.util import convert_bytes, convert_seconds
 from src.logger import logger
 
 class JobRunner:
@@ -63,13 +63,13 @@ class JobRunner:
             schedule.run_pending()
             time.sleep(1)
 
-    def get_and_delete_job(self):
+    def get_and_delete_job(self, execution_count: int = 0):
         """
         This function gets unplayed movies and TV shows and deletes them if they are eligible for deletion.
         """
         logger.debug("[JOB] Fetch and delete job started")
 
-        if self.free_space.enabled and not self.__free_space_below_minimum():
+        if (self.free_space.enabled and self.free_space.prevent_age_based_deletion) and not self.__free_space_below_minimum():
             logger.info("[JOB] Free space is above the minimum threshold. Skipping job.")
             return
 
@@ -81,6 +81,21 @@ class JobRunner:
             logger.debug("[JOB] Fetching and deleting series")
             self.get_and_delete_series()
 
+        if self.free_space.enabled and self.free_space.progressive_deletion and self.__free_space_below_minimum():
+            self.radarr_watched_deletion_threshold -= self.free_space.progressive_deletion_threshold
+            self.radarr_unwatched_deletion_threshold -= self.free_space.progressive_deletion_threshold
+            self.sonarr_watched_deletion_threshold -= self.free_space.progressive_deletion_threshold
+            self.sonarr_unwatched_deletion_threshold -= self.free_space.progressive_deletion_threshold
+            logger.info("[JOB][FREE SPACE] Free space is still below the minimum threshold. Decreasing deletion thresholds by %s day. New thresholds: Radarr watched: %s. Radarr unwatched: %s. Sonarr watched: %s. Sonarr unwatched: %s.", convert_seconds(self.free_space.progressive_deletion_threshold), convert_seconds(self.radarr_watched_deletion_threshold), convert_seconds(self.radarr_unwatched_deletion_threshold), convert_seconds(self.sonarr_watched_deletion_threshold), convert_seconds(self.sonarr_unwatched_deletion_threshold))
+            self.get_and_delete_job(execution_count + 1)
+        elif execution_count > 0 and execution_count <= self.free_space.progressive_deletion_maximum_execution_count:
+            self.radarr_watched_deletion_threshold += (self.free_space.progressive_deletion_threshold * execution_count)
+            self.radarr_unwatched_deletion_threshold += (self.free_space.progressive_deletion_threshold * execution_count)
+            self.sonarr_watched_deletion_threshold += (self.free_space.progressive_deletion_threshold * execution_count)
+            self.sonarr_unwatched_deletion_threshold += (self.free_space.progressive_deletion_threshold * execution_count)
+            logger.info("[JOB][FREE SPACE] Free space is above the minimum threshold. Increasing deletion thresholds to original levels. New thresholds: Radarr watched: %s. Radarr unwatched: %s. Sonarr watched: %s. Sonarr unwatched: %s.", convert_seconds(self.radarr_watched_deletion_threshold), convert_seconds(self.radarr_unwatched_deletion_threshold), convert_seconds(self.sonarr_watched_deletion_threshold), convert_seconds(self.sonarr_unwatched_deletion_threshold))
+
+
         logger.debug("[JOB] Fetch and delete job finished")
 
     def dynamic_load_job(self):
@@ -89,7 +104,7 @@ class JobRunner:
         """
         logger.debug("[JOB] Dynamic load job started")
 
-        if self.free_space.enabled and not self.__free_space_below_minimum():
+        if (self.free_space.enabled and self.free_space.prevent_dynamic_load) and not self.__free_space_below_minimum():
             logger.info("[JOB] Free space is above the minimum threshold. Skipping job.")
             return
 

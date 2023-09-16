@@ -58,6 +58,11 @@ class FreeSpace:
     enabled: bool
     minimum_free_space_percentage: int
     path: str
+    prevent_age_based_deletion: bool
+    prevent_dynamic_load: bool
+    progressive_deletion: bool
+    progressive_deletion_maximum_execution_count: int
+    progressive_deletion_threshold: int = 86400
 
 @dataclass
 class Experimental:
@@ -84,7 +89,7 @@ class Config:
         self.radarr = RadarrConfig(False, "", "https://host:port/api/v3", [], 7776000, 2592000)
         self.sonarr = SonarrConfig(False, "", "https://host:port/api/v3", True, [], DynamicLoad(False, 3, 3, 7776000, 600), 7776000, 2592000)
         self.overseerr = OverseerrConfig(False, "", "http://host:port/api/v1", 10)
-        self.experimental = Experimental(FreeSpace(False, "", 0))
+        self.experimental = Experimental(FreeSpace(False, 0, "", False, False, False, 0, 86400))
         
         config = self._get_config()
 
@@ -138,6 +143,7 @@ class Config:
             experimental_config = config["experimental"].copy()
             free_space_config = experimental_config.pop("free_space", None)
             self.experimental = Experimental(**experimental_config, free_space=FreeSpace(**free_space_config))
+            self.experimental.free_space.progressive_deletion_threshold = self._convert_to_seconds(self.experimental.free_space.progressive_deletion_threshold, "experimental.free_space.progressive_deletion_threshold")
         except ValueError as err:
             print("Error in configuration file:")
             print(err)

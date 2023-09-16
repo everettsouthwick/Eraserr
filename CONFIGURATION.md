@@ -7,40 +7,44 @@ This guide contains all the information you need to configure `Eraserr` using a 
   - [Log Level](#log-level)
   - [Schedule Interval](#schedule-interval)
 - [Plex](#plex)
-  - [Base URL](#plex-base-url)
-  - [Token](#plex-token)
+  - [Base URL](#base-url)
+  - [Token](#token)
 - [Radarr](#radarr)
-  - [Enabled](#radarr-enabled)
-  - [API Key](#radarr-api-key)
-  - [Base URL](#radarr-base-url)
-  - [Exempt Tag Names](#radarr-exempt-tag-names)
-  - [Watched Deletion Threshold](#radarr-watched-deletion-threshold)
-  - [Unwatched Deletion Threshold](#radarr-unwatched-deletion-threshold)
+  - [Enabled](#enabled)
+  - [API Key](#api-key)
+  - [Base URL](#base-url-1)
+  - [Exempt Tag Names](#exempt-tag-names)
+  - [Watched Deletion Threshold](#watched-deletion-threshold)
+  - [Unwatched Deletion Threshold](#unwatched-deletion-threshold)
 - [Sonarr](#sonarr)
-  - [Enabled](#sonarr-enabled)
-  - [API Key](#sonarr-api-key)
-  - [Base URL](#sonarr-base-url)
-  - [Monitor Continuing Series](#sonarr-monitor-continuing-series)
-  - [Dynamic Load](#sonarr-dynamic-load)
-    - [Enabled](#enabled)
+  - [Enabled](#enabled-1)
+  - [API Key](#api-key-1)
+  - [Base URL](#base-url-2)
+  - [Monitor Continuing Series](#monitor-continuing-series)
+  - [Dynamic Load](#dynamic-load)
+    - [Enabled](#enabled-2)
     - [Episodes to Load](#episodes-to-load)
     - [Episodes to Keep](#episodes-to-keep)
     - [Watched Deletion Threshold](#watched-deletion-threshold)
     - [Schedule Interval](#schedule-interval)
-    - [Additional Information](#additional-information)
-  - [Exempt Tag Names](#sonarr-exempt-tag-names)
-  - [Watched Deletion Threshold](#sonarr-watched-deletion-threshold)
-  - [Unwatched Deletion Threshold](#sonarr-unwatched-deletion-threshold)
+  - [Exempt Tag Names](#exempt-tag-names-1)
+  - [Watched Deletion Threshold](#watched-deletion-threshold-1)
+  - [Unwatched Deletion Threshold](#unwatched-deletion-threshold-1)
 - [Overseerr](#overseerr)
-  - [Enabled](#overseerr-enabled)
-  - [API Key](#overseerr-api-key)
-  - [Base URL](#overseerr-base-url)
-  - [Fetch Limit](#overseerr-fetch-limit)
+  - [Enabled](#enabled-2)
+  - [API Key](#api-key-2)
+  - [Base URL](#base-url-3)
+  - [Fetch Limit](#fetch-limit)
 - [Experimental](#experimental)
-  - [Free Space Configuration](#free-space-configuration)
-    - [Enabled](#enabled-1)
+  - [Free Space](#free-space)
+    - [Enabled](#enabled-3)
     - [Minimum Free Space Percentage](#minimum-free-space-percentage)
     - [Path](#path)
+    - [Prevent Age-Based Deletion](#prevent-age-based-deletion)
+    - [Prevent Dynamic Load](#prevent-dynamic-load)
+    - [Progressive Deletion](#progressive-deletion)
+    - [Progressive Deletion Threshold](#progressive-deletion-threshold)
+    - [Progressive Deletion Maximum Execution Count](#progressive-deletion-maximum-execution-count)
 
 ## General Settings
 
@@ -77,10 +81,10 @@ Set the interval at which the script runs by replacing the `schedule_interval` v
 }
 ```
 
-### Plex Base URL
+### Base URL
 Update the `base_url` with your Plex base URL.
 
-### Plex Token
+### Token
 Replace the empty `token` value with your Plex token.
 
 ## Radarr
@@ -99,22 +103,22 @@ Replace the empty `token` value with your Plex token.
 }
 ```
 
-### Radarr Enabled
+### Enabled
 Set to `true` to enable Radarr integration. Set to `false` to disable it.
 
-### Radarr API Key
+### API Key
 Replace the empty `api_key` value with your Radarr API Key.
 
-### Radarr Base URL
+### Base URL
 Update the `base_url` with your Radarr base URL.
 
-### Radarr Exempt Tag Names
+### Exempt Tag Names
 Set tag names to exempt from automatic deletion by updating the `exempt_tag_names` array.
 
-### Radarr Watched Deletion Threshold
+### Watched Deletion Threshold
 Set the threshold for watched media deletion by replacing the `watched_deletion_threshold` value. The value should be in the format `<integer><d/h/m/s>` (days, hours, minutes, seconds).
 
-### Radarr Unwatched Deletion Threshold
+### Unwatched Deletion Threshold
 Set the threshold for unwatched media deletion by replacing the `unwatched_deletion_threshold` value. The value should be in the format `<integer><d/h/m/s>` (days, hours, minutes, seconds).
 
 ## Sonarr
@@ -141,19 +145,19 @@ Set the threshold for unwatched media deletion by replacing the `unwatched_delet
 }
 ```
 
-### Sonarr Enabled
+### Enabled
 Set to `true` to enable Sonarr integration. Set to `false` to disable it.
 
-### Sonarr API Key
+### API Key
 Replace the empty `api_key` value with your Sonarr API Key.
 
-### Sonarr Base URL
+### Base URL
 Update the `base_url` with your Sonarr base URL.
 
-### Sonarr Monitor Continuing Series
+### Monitor Continuing Series
 Set to `true` if you want to monitor continuing series instead of deleting it from Sonarr so that new seasons are fetched.
 
-### Sonarr Dynamic Load
+### Dynamic Load
 
 Configure the dynamic load settings to efficiently manage your media storage on the Plex server. This feature preloads episodes ahead of the current viewing point and deletes watched episodes, saving substantial storage space. It considers the viewing patterns of multiple users to prevent premature deletion of episodes being watched concurrently.
 
@@ -179,13 +183,13 @@ Set the interval at which dynamic load runs by replacing the `schedule_interval`
 #### Additional Information
 Utilize the exempt tags to exclude specific series from dynamic loading, ensuring they remain available for repeated viewing.
 
-### Sonarr Exempt Tag Names
+### Exempt Tag Names
 Set tag names to exempt from automatic deletion by updating the `exempt_tag_names` array.
 
-### Sonarr Watched Deletion Threshold
+### Watched Deletion Threshold
 Set the threshold for watched media deletion by replacing the `watched_deletion_threshold` value. The value should be in the format `<integer><d/h/m/s>` (days, hours, minutes, seconds).
 
-### Sonarr Unwatched Deletion Threshold
+### Unwatched Deletion Threshold
 Set the threshold for unwatched media deletion by replacing the `unwatched_deletion_threshold` value. The value should be in the format `<integer><d/h/m/s>` (days, hours, minutes, seconds).
 
 ## Overseerr
@@ -199,30 +203,35 @@ Set the threshold for unwatched media deletion by replacing the `unwatched_delet
 }
 ```
 
-### Overseerr Enabled
+### Enabled
 Set to `true` to enable Overseerr integration. Set to `false` to disable it.
 
-### Overseerr API Key
+### API Key
 Replace the empty `api_key` value with your Overseerr API Key.
 
-### Overseerr Base URL
+### Base URL
 Update the `base_url` with your Overseerr base URL.
 
-### Overseerr Fetch Limit
+### Fetch Limit
 Set the number of results to fetch from Overseerr by replacing the `fetch_limit` value.
 
 ## Experimental
 
 The experimental section contains configurations that are in the testing phase. These settings may be subject to changes and updates. Use them at your own risk.
 
-### Free Space Configuration
+### Free Space
 
 ```json
 "experimental": {
     "free_space": {
         "enabled": false,
         "minimum_free_space_percentage": 20,
-        "path": "/mnt/local/Media"
+        "path": "/mnt/local/Media",
+        "prevent_age_based_deletion": true,
+        "prevent_dynamic_load": true,
+        "progressive_deletion": true,
+        "progressive_deletion_threshold": "1d",
+        "progressive_deletion_maximum_execution_count": 14
     }
 }
 ```
@@ -251,4 +260,49 @@ Define the minimum free space as a percentage of the total space that should be 
 
 Specify the path that should be monitored for free space. Ensure to update this with the correct path where your media files are stored.
 
+#### Prevent Age-Based Deletion
+
+```json
+"prevent_age_based_deletion": true
+```
+
+When enabled, this setting prevents the deletion of files based on their age, overriding the traditional age-based deletion mechanism. This is to ensure that the free space feature does not delete files that have surpassed a certain age threshold, helping to maintain the minimum free space requirement without compromising older files.
+
+#### Prevent Dynamic Load
+
+```json
+"prevent_dynamic_load": true
+```
+
+This setting, when enabled, prevents the dynamic load feature from functioning if the free space is above the minimum threshold. This is to avoid unnecessary loading and deletion of files, ensuring that the system maintains a healthy free space level without overloading the storage with new files.
+
+#### Progressive Deletion
+
+```json
+"progressive_deletion": true
+```
+
+Activating this setting allows the system to progressively delete files in an attempt to maintain the minimum free space threshold. It operates by recursively deleting files, lowering the deletion thresholds step by step until the free space is above the minimum or the maximum number of executions (defined by "progressive_deletion_maximum_execution_count") has been reached. This feature should be used with caution as it can potentially delete a large number of files in a short period.
+
+#### Progressive Deletion Threshold
+
+```json
+"progressive_deletion_threshold": "1d"
+```
+
+This setting defines the threshold for progressive deletion. The system will lower the deletion thresholds by the specified time interval (in this case, 1 day) during each recursive deletion cycle. The value should be in the format `<integer><d/h/m/s>` (days, hours, minutes, seconds).
+
+#### Progressive Deletion Maximum Execution Count
+
+```json
+"progressive_deletion_maximum_execution_count": 14
+```
+
+This setting limits the number of recursive deletion cycles the system can perform during a progressive deletion operation. It acts as a safeguard to prevent excessive deletions, stopping the operation after the specified number of executions, even if the minimum free space threshold has not been met. The value should be an integer representing the maximum number of deletion cycles allowed.
+
+**Note**: The progressive deletion feature is powerful and can potentially delete a significant number of files. It should be used with caution, and users should monitor its behavior closely to prevent unintended data loss.
+
 **Note**: This feature is experimental and might not work as expected in all scenarios. It is recommended to use it with caution and monitor its behavior closely to prevent any unintended data loss.
+
+
+

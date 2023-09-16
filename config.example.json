@@ -46,7 +46,12 @@
         "free_space": {
             "enabled": false,
             "minimum_free_space_percentage": 20,
-            "path": "/mnt/local/Media"
+            "path": "/mnt/local/Media",
+            "prevent_age_based_deletion": true,
+            "prevent_dynamic_load": true,
+            "progressive_deletion": true,
+            "progressive_deletion_threshold": "1d",
+            "progressive_deletion_maximum_execution_count": 14
         }
     }
 }
