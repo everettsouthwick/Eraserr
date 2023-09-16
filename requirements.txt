@@ -2,3 +2,22 @@ PlexAPI==4.15.1
 Requests==2.31.0
 retry==0.9.2
 schedule==1.2.0
+
+    // "overseerr": {
+    //     "enabled": true,
+    //     "api_key": "MTY3MjI0NzIyNDY0NGEzNmYwMjM1LTdlNTEtNGQ4Mi05ZjBhLTFhYmVjMDU0ZWY1MSk=",
+    //     "base_url": "http://overseerr.plexapp.dev/api/v1",
+    //     "fetch_limit": 1000
+    // },
+    // "experimental": {
+    //     "free_space": {
+    //         "enabled": true,
+    //         "minimum_free_space_percentage": 50,
+    //         "path": "C:",
+    //         "prevent_dynamic_load": true,
+    //         "prevent_age_based_deletion": true,
+    //         "progressive_deletion": true,
+    //         "progressive_deletion_maximum_execution_count": 14,
+    //         "progressive_deletion_threshold": "1d"
+    //     }
+    // }

@@ -43,8 +43,9 @@ This guide contains all the information you need to configure `Eraserr` using a 
     - [Prevent Age-Based Deletion](#prevent-age-based-deletion)
     - [Prevent Dynamic Load](#prevent-dynamic-load)
     - [Progressive Deletion](#progressive-deletion)
-    - [Progressive Deletion Threshold](#progressive-deletion-threshold)
-    - [Progressive Deletion Maximum Execution Count](#progressive-deletion-maximum-execution-count)
+      - [Enabled](#enabled-5)
+      - [Maximum Deletion Cycles](#maximum-deletion-cycles)
+      - [Threshold Reduction Per Cycle](#threshold-reduction-per-cycle)
 
 ## General Settings
 
@@ -229,9 +230,11 @@ The experimental section contains configurations that are in the testing phase. 
         "path": "/mnt/local/Media",
         "prevent_age_based_deletion": true,
         "prevent_dynamic_load": true,
-        "progressive_deletion": true,
-        "progressive_deletion_threshold": "1d",
-        "progressive_deletion_maximum_execution_count": 14
+        "progressive_deletion": {
+            "enabled": false,
+            "maximum_deletion_cycles": 0,
+            "threshold_reduction_per_cycle": "1d"
+        }
     }
 }
 ```
@@ -280,26 +283,30 @@ This setting, when enabled, prevents the dynamic load feature from functioning i
 
 #### Progressive Deletion
 
-```json
-"progressive_deletion": true
-```
+Progressive deletion initiates a systematic process that lowers the deletion thresholds in each cycle, either until the free space exceeds the minimum threshold or until the maximum number of cycles (defined by `maximum_deletion_cycles`) is reached. 
 
-Activating this setting allows the system to progressively delete files in an attempt to maintain the minimum free space threshold. It operates by recursively deleting files, lowering the deletion thresholds step by step until the free space is above the minimum or the maximum number of executions (defined by `progressive_deletion_maximum_execution_count`) has been reached.
-
-**Note**: The progressive deletion feature is powerful and can potentially delete a significant number of files. It should be used with caution, and users should monitor its behavior closely to prevent unintended data loss.
-
-#### Progressive Deletion Threshold
+##### Enabled
 
 ```json
-"progressive_deletion_threshold": "1d"
+"enabled": true
 ```
 
-This setting defines the threshold for progressive deletion. The system will lower the deletion thresholds by the specified time interval (in this case, 1 day) during each recursive deletion cycle. The value should be in the format `<integer><d/h/m/s>` (days, hours, minutes, seconds).
+By setting this to true, you activate the progressive deletion process. This methodical approach to file deletion helps maintain the minimum free space threshold by recursively deleting files, reducing the deletion thresholds step by step in each cycle. It's a potent feature that can potentially remove a significant number of files in a short period, so it should be used with caution. Users are advised to monitor its behavior closely to prevent unintended data loss.
 
-#### Progressive Deletion Maximum Execution Count
+**Note**: This feature is powerful and can potentially delete a large number of files in a short period. It is recommended to use this feature judiciously and to monitor its behavior closely to prevent unintended data loss.
+
+##### Maximum Deletion Cycles
 
 ```json
-"progressive_deletion_maximum_execution_count": 14
+"maximum_deletion_cycles": 14
 ```
 
-This setting limits the number of recursive deletion cycles the system can perform during a progressive deletion operation. It acts as a safeguard to prevent excessive deletions, stopping the operation after the specified number of executions, even if the minimum free space threshold has not been met. The value should be an integer representing the maximum number of deletion cycles allowed.
+This parameter sets a limit on the number of recursive deletion cycles the system can execute during a progressive deletion operation. It serves as a protective measure to prevent excessive deletions, halting the operation after the specified number of cycles, even if the minimum free space threshold hasn't been achieved. The value should be an integer representing the maximum number of deletion cycles permitted.
+
+##### Threshold Reduction Per Cycle
+
+```json
+"threshold_reduction_per_cycle": "1d"
+```
+
+This parameter specifies the amount by which the deletion threshold is reduced in each cycle. By lowering the deletion thresholds by the specified time interval (in this case, 1 day) during each cycle, the system can progressively free up more space. The value should be formatted as `<integer><d/h/m/s>` (days, hours, minutes, seconds), representing the time interval for threshold reduction.

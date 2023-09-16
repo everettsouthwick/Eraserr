@@ -34,6 +34,7 @@ class JobRunner:
         self.sonarr_unwatched_deletion_threshold = config.sonarr.unwatched_deletion_threshold
         self.overseerr_enabled = config.overseerr.enabled
         self.free_space = config.experimental.free_space
+        self.progressive_deletion = config.experimental.free_space.progressive_deletion
 
     def __free_space_below_minimum(self):
         """
@@ -63,7 +64,7 @@ class JobRunner:
             schedule.run_pending()
             time.sleep(1)
 
-    def get_and_delete_job(self, execution_count: int = 0):
+    def get_and_delete_job(self, deletion_cycle: int = 0):
         """
         This function gets unplayed movies and TV shows and deletes them if they are eligible for deletion.
         """
@@ -81,18 +82,18 @@ class JobRunner:
             logger.debug("[JOB] Fetching and deleting series")
             self.get_and_delete_series()
 
-        if self.free_space.enabled and self.free_space.progressive_deletion and self.__free_space_below_minimum():
-            self.radarr_watched_deletion_threshold -= self.free_space.progressive_deletion_threshold
-            self.radarr_unwatched_deletion_threshold -= self.free_space.progressive_deletion_threshold
-            self.sonarr_watched_deletion_threshold -= self.free_space.progressive_deletion_threshold
-            self.sonarr_unwatched_deletion_threshold -= self.free_space.progressive_deletion_threshold
-            logger.info("[JOB][FREE SPACE] Free space is still below the minimum threshold. Decreasing deletion thresholds by %s day. New thresholds: Radarr watched: %s. Radarr unwatched: %s. Sonarr watched: %s. Sonarr unwatched: %s.", convert_seconds(self.free_space.progressive_deletion_threshold), convert_seconds(self.radarr_watched_deletion_threshold), convert_seconds(self.radarr_unwatched_deletion_threshold), convert_seconds(self.sonarr_watched_deletion_threshold), convert_seconds(self.sonarr_unwatched_deletion_threshold))
-            self.get_and_delete_job(execution_count + 1)
-        elif execution_count > 0 and execution_count <= self.free_space.progressive_deletion_maximum_execution_count:
-            self.radarr_watched_deletion_threshold += (self.free_space.progressive_deletion_threshold * execution_count)
-            self.radarr_unwatched_deletion_threshold += (self.free_space.progressive_deletion_threshold * execution_count)
-            self.sonarr_watched_deletion_threshold += (self.free_space.progressive_deletion_threshold * execution_count)
-            self.sonarr_unwatched_deletion_threshold += (self.free_space.progressive_deletion_threshold * execution_count)
+        if self.free_space.enabled and self.progressive_deletion.enabled and self.__free_space_below_minimum():
+            self.radarr_watched_deletion_threshold -= self.progressive_deletion.threshold_reduction_per_cycle if self.radarr_watched_deletion_threshold - self.progressive_deletion.threshold_reduction_per_cycle > 0 else 0
+            self.radarr_unwatched_deletion_threshold -= self.progressive_deletion.threshold_reduction_per_cycle if self.radarr_unwatched_deletion_threshold - self.progressive_deletion.threshold_reduction_per_cycle > 0 else 0
+            self.sonarr_watched_deletion_threshold -= self.progressive_deletion.threshold_reduction_per_cycle if self.sonarr_watched_deletion_threshold - self.progressive_deletion.threshold_reduction_per_cycle > 0 else 0
+            self.sonarr_unwatched_deletion_threshold -= self.progressive_deletion.threshold_reduction_per_cycle if self.sonarr_unwatched_deletion_threshold - self.progressive_deletion.threshold_reduction_per_cycle > 0 else 0
+            logger.info("[JOB][FREE SPACE] Free space is still below the minimum threshold. Decreasing deletion thresholds by %s. New thresholds: Radarr watched: %s. Radarr unwatched: %s. Sonarr watched: %s. Sonarr unwatched: %s.", convert_seconds(self.progressive_deletion.threshold_reduction_per_cycle), convert_seconds(self.radarr_watched_deletion_threshold), convert_seconds(self.radarr_unwatched_deletion_threshold), convert_seconds(self.sonarr_watched_deletion_threshold), convert_seconds(self.sonarr_unwatched_deletion_threshold))
+            self.get_and_delete_job(deletion_cycle + 1)
+        elif deletion_cycle > 0 and deletion_cycle <= self.progressive_deletion.maximum_deletion_cycles:
+            self.radarr_watched_deletion_threshold += (self.progressive_deletion.threshold_reduction_per_cycle * deletion_cycle)
+            self.radarr_unwatched_deletion_threshold += (self.progressive_deletion.threshold_reduction_per_cycle * deletion_cycle)
+            self.sonarr_watched_deletion_threshold += (self.progressive_deletion.threshold_reduction_per_cycle * deletion_cycle)
+            self.sonarr_unwatched_deletion_threshold += (self.progressive_deletion.threshold_reduction_per_cycle * deletion_cycle)
             logger.info("[JOB][FREE SPACE] Free space is above the minimum threshold. Increasing deletion thresholds to original levels. New thresholds: Radarr watched: %s. Radarr unwatched: %s. Sonarr watched: %s. Sonarr unwatched: %s.", convert_seconds(self.radarr_watched_deletion_threshold), convert_seconds(self.radarr_unwatched_deletion_threshold), convert_seconds(self.sonarr_watched_deletion_threshold), convert_seconds(self.sonarr_unwatched_deletion_threshold))
 
 
