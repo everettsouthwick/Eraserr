@@ -31,13 +31,13 @@ This guide contains all the information you need to configure `Eraserr` using a 
   - [Watched Deletion Threshold](#watched-deletion-threshold-2)
   - [Unwatched Deletion Threshold](#unwatched-deletion-threshold-1)
 - [Overseerr](#overseerr)
-  - [Enabled](#enabled-2)
+  - [Enabled](#enabled-3)
   - [API Key](#api-key-2)
   - [Base URL](#base-url-3)
   - [Fetch Limit](#fetch-limit)
 - [Experimental](#experimental)
   - [Free Space](#free-space)
-    - [Enabled](#enabled-3)
+    - [Enabled](#enabled-4)
     - [Minimum Free Space Percentage](#minimum-free-space-percentage)
     - [Path](#path)
     - [Prevent Age-Based Deletion](#prevent-age-based-deletion)
@@ -244,6 +244,8 @@ The experimental section contains configurations that are in the testing phase. 
 
 Toggle this setting to enable or disable the free space feature. When enabled, the program will monitor the specified path to ensure that the minimum free space threshold is maintained.
 
+**Note**: This feature is experimental and might not work as expected in all scenarios. It is recommended to use it with caution and monitor its behavior closely to prevent any unintended data loss.
+
 #### Minimum Free Space Percentage
 
 ```json
@@ -282,7 +284,9 @@ This setting, when enabled, prevents the dynamic load feature from functioning i
 "progressive_deletion": true
 ```
 
-Activating this setting allows the system to progressively delete files in an attempt to maintain the minimum free space threshold. It operates by recursively deleting files, lowering the deletion thresholds step by step until the free space is above the minimum or the maximum number of executions (defined by "progressive_deletion_maximum_execution_count") has been reached. This feature should be used with caution as it can potentially delete a large number of files in a short period.
+Activating this setting allows the system to progressively delete files in an attempt to maintain the minimum free space threshold. It operates by recursively deleting files, lowering the deletion thresholds step by step until the free space is above the minimum or the maximum number of executions (defined by `progressive_deletion_maximum_execution_count`) has been reached.
+
+**Note**: The progressive deletion feature is powerful and can potentially delete a significant number of files. It should be used with caution, and users should monitor its behavior closely to prevent unintended data loss.
 
 #### Progressive Deletion Threshold
 
@@ -299,10 +303,3 @@ This setting defines the threshold for progressive deletion. The system will low
 ```
 
 This setting limits the number of recursive deletion cycles the system can perform during a progressive deletion operation. It acts as a safeguard to prevent excessive deletions, stopping the operation after the specified number of executions, even if the minimum free space threshold has not been met. The value should be an integer representing the maximum number of deletion cycles allowed.
-
-**Note**: The progressive deletion feature is powerful and can potentially delete a significant number of files. It should be used with caution, and users should monitor its behavior closely to prevent unintended data loss.
-
-**Note**: This feature is experimental and might not work as expected in all scenarios. It is recommended to use it with caution and monitor its behavior closely to prevent any unintended data loss.
-
-
-
