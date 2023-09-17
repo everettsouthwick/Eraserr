@@ -53,11 +53,22 @@ class OverseerrConfig:
     fetch_limit: int
 
 @dataclass
+class ProgressiveDeletion:
+    """This class is used to store the configuration values for the progressive deletion feature."""
+    enabled: bool
+    maximum_deletion_cycles: int
+    threshold_reduction_per_cycle: int
+
+@dataclass
 class FreeSpace:
     """This class is used to store the configuration values for the free space feature."""
     enabled: bool
     minimum_free_space_percentage: int
     path: str
+    prevent_age_based_deletion: bool
+    prevent_dynamic_load: bool
+    progressive_deletion: field(default_factory=ProgressiveDeletion)
+
 
 @dataclass
 class Experimental:
@@ -84,7 +95,7 @@ class Config:
         self.radarr = RadarrConfig(False, "", "https://host:port/api/v3", [], 7776000, 2592000)
         self.sonarr = SonarrConfig(False, "", "https://host:port/api/v3", True, [], DynamicLoad(False, 3, 3, 7776000, 600), 7776000, 2592000)
         self.overseerr = OverseerrConfig(False, "", "http://host:port/api/v1", 10)
-        self.experimental = Experimental(FreeSpace(False, "", 0))
+        self.experimental = Experimental(FreeSpace(False, 0, "", False, False, ProgressiveDeletion(False, 0, 86400)))
         
         config = self._get_config()
 
@@ -118,39 +129,36 @@ class Config:
                 raise KeyError(f"Missing required configuration key: {key}")
 
         try:
-            self.dry_run = config["dry_run"] in [True, "True", "true", "1"]
-            self.log_level = config["log_level"]
-            self.schedule_interval = self._convert_to_seconds(config["schedule_interval"], "schedule_interval")
-            self.plex = PlexConfig(**config["plex"])
-            self.radarr = RadarrConfig(**config["radarr"])
-            self.radarr.watched_deletion_threshold = self._convert_to_seconds(self.radarr.watched_deletion_threshold, "radarr.watched_deletion_threshold")
-            self.radarr.unwatched_deletion_threshold = self._convert_to_seconds(self.radarr.unwatched_deletion_threshold, "radarr.unwatched_deletion_threshold")
-            self.sonarr = SonarrConfig(**config["sonarr"])
-            sonarr_config = config["sonarr"].copy()
-            dynamic_load_config = sonarr_config.pop("dynamic_load", None)
-            self.sonarr = SonarrConfig(**sonarr_config, dynamic_load=DynamicLoad(**dynamic_load_config))
-            self.sonarr.dynamic_load.schedule_interval = self._convert_to_seconds(self.sonarr.dynamic_load.schedule_interval, "sonarr.dynamic_load.schedule_interval")
-            self.sonarr.dynamic_load.watched_deletion_threshold = self._convert_to_seconds(self.sonarr.dynamic_load.watched_deletion_threshold, "sonarr.dynamic_load.watched_deletion_threshold")
-            self.sonarr.watched_deletion_threshold = self._convert_to_seconds(self.sonarr.watched_deletion_threshold, "sonarr.watched_deletion_threshold")
-            self.sonarr.unwatched_deletion_threshold = self._convert_to_seconds(self.sonarr.unwatched_deletion_threshold, "sonarr.unwatched_deletion_threshold")
-            self.overseerr = OverseerrConfig(**config["overseerr"])
-            self.experimental = Experimental(**config["experimental"])
-            experimental_config = config["experimental"].copy()
-            free_space_config = experimental_config.pop("free_space", None)
-            self.experimental = Experimental(**experimental_config, free_space=FreeSpace(**free_space_config))
-
-        except KeyError as err:
-            print("Error in configuration file:")
-            print(err)
-            sys.exit()
-        except TypeError as err:
-            print("Error in configuration file:")
-            print(err)
-            sys.exit()
+            self.dry_run = self._get_value_or_default(config, "dry_run", True)
+            self.log_level = self._get_value_or_default(config, "log_level", "INFO")
+            self.schedule_interval = self._get_value_or_default(config, "schedule_interval", 86400, True)
+            plex_config = self._get_value_or_default(config, "plex", {})
+            self.plex = PlexConfig(self._get_value_or_default(plex_config, "base_url", "https://host:port"), self._get_value_or_default(plex_config, "token", ""))
+            radarr_config = self._get_value_or_default(config, "radarr", {})
+            self.radarr = RadarrConfig(self._get_value_or_default(radarr_config, "enabled", False), self._get_value_or_default(radarr_config, "api_key", ""), self._get_value_or_default(radarr_config, "base_url", "https://host:port/api/v3"), self._get_value_or_default(radarr_config, "exempt_tag_names", []), self._get_value_or_default(radarr_config, "watched_deletion_threshold", 7776000, True), self._get_value_or_default(radarr_config, "unwatched_deletion_threshold", 2592000, True))
+            sonarr_config = self._get_value_or_default(config, "sonarr", {})
+            dynamic_load_config = self._get_value_or_default(sonarr_config, "dynamic_load", {})
+            self.sonarr = SonarrConfig(self._get_value_or_default(sonarr_config, "enabled", False), self._get_value_or_default(sonarr_config, "api_key", ""), self._get_value_or_default(sonarr_config, "base_url", "https://host:port/api/v3"), self._get_value_or_default(sonarr_config, "monitor_continuing_series", True), self._get_value_or_default(sonarr_config, "exempt_tag_names", []), DynamicLoad(self._get_value_or_default(dynamic_load_config, "enabled", False), self._get_value_or_default(dynamic_load_config, "episodes_to_load", 3), self._get_value_or_default(dynamic_load_config, "episodes_to_keep", 3), self._get_value_or_default(dynamic_load_config, "watched_deletion_threshold", 7776000, True), self._get_value_or_default(dynamic_load_config, "schedule_interval", 600, True)), self._get_value_or_default(sonarr_config, "watched_deletion_threshold", 7776000, True), self._get_value_or_default(sonarr_config, "unwatched_deletion_threshold", 2592000, True))
+            overseerr_config = self._get_value_or_default(config, "overseerr", {})
+            self.overseerr = OverseerrConfig(self._get_value_or_default(overseerr_config, "enabled", False), self._get_value_or_default(overseerr_config, "api_key", ""), self._get_value_or_default(overseerr_config, "base_url", "http://host:port/api/v1"), self._get_value_or_default(overseerr_config, "fetch_limit", 10))
+            experimental_config = self._get_value_or_default(config, "experimental", {})
+            free_space_config = self._get_value_or_default(experimental_config, "free_space", {})
+            progressive_deletion_config = self._get_value_or_default(free_space_config, "progressive_deletion", {})
+            self.experimental = Experimental(FreeSpace(self._get_value_or_default(free_space_config, "enabled", False), self._get_value_or_default(free_space_config, "minimum_free_space_percentage", 0), self._get_value_or_default(free_space_config, "path", ""), self._get_value_or_default(free_space_config, "prevent_age_based_deletion", False), self._get_value_or_default(free_space_config, "prevent_dynamic_load", False), ProgressiveDeletion(self._get_value_or_default(progressive_deletion_config, "enabled", False), self._get_value_or_default(progressive_deletion_config, "maximum_deletion_cycles", 0), self._get_value_or_default(progressive_deletion_config, "threshold_reduction_per_cycle", 86400, True))))
         except ValueError as err:
             print("Error in configuration file:")
             print(err)
             sys.exit()
+
+    def _get_value_or_default(self, config: Dict[str, Any], key: str, default: Any, convert_to_seconds: bool = False) -> Any:
+        if key not in config:
+            print("Missing configuration key: %s. Using default value: %s", key, default)
+            return default
+        
+        if convert_to_seconds:
+            return self._convert_to_seconds(config.get(key, default), key)
+        
+        return config.get(key, default)
     
     def _convert_to_seconds(self, time: str, key_name: str) -> int:
         """
@@ -168,7 +176,7 @@ class Config:
         # If the time is already an integer, return it
         try:
             return int(time)
-        except:
+        except ValueError:
             pass
 
         match = re.match(r'^(\d+)([smhd])$', time.lower())
@@ -187,4 +195,4 @@ class Config:
         elif unit == "d":
             return value * 86400
         else:
-            raise ValueError(f"'retrieval_interval' invalid time unit: {unit}. Accepted units: s (seconds), m (minutes), h (hours), d (days).")
+            return value
