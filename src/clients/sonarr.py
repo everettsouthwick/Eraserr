@@ -280,13 +280,15 @@ class SonarrClient:
 
             if series.get("id") is not None:
                 ended = series.get("ended", False)
-                if not self.monitor_continuing_series or ended:
+                if self.dynamic_load.enabled:
+                    total_size += self.__handle_continuing_series(series, dry_run)
+                elif not self.monitor_continuing_series or ended:
                     total_size += self.__handle_ended_series(series, dry_run)
                 else:
                     total_size += self.__handle_continuing_series(series, dry_run)
 
         if dry_run:
-            logger.info("[SONARR][DRY_RUN] Total series: %s. Series eligible for deletion: %s. Series deleted: %s. Series exempt: %s. Total space freed: %s.", len(media), original_deletion_count, len(media_to_delete), exempt_count, convert_bytes(total_size))
+            logger.info("[SONARR][DRY RUN] Total series: %s. Series eligible for deletion: %s. Series deleted: %s. Series exempt: %s. Total space freed: %s.", len(media), original_deletion_count, len(media_to_delete), exempt_count, convert_bytes(total_size))
         else:
             logger.info("[SONARR] Total series: %s. Series eligible for deletion: %s. Series deleted: %s. Series exempt: %s. Total space freed: %s.", len(media), original_deletion_count, len(media_to_delete), exempt_count, convert_bytes(total_size))
 
