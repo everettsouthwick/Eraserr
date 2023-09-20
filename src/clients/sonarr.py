@@ -135,7 +135,26 @@ class SonarrClient:
         episodes = self.__get_media_episodes(series.get("id"))
         filtered_episodes = [episode for episode in episodes if episode['seasonNumber'] != 0]
         sorted_episodes = sorted(filtered_episodes, key=lambda x: (x['seasonNumber'], x['episodeNumber']))
+        episodes_to_load = sorted_episodes[:self.dynamic_load.episodes_to_load]
         episodes_to_unload = sorted_episodes[self.dynamic_load.episodes_to_load:]
+
+        monitor_episode_ids = []
+        search_episode_ids = []
+
+        for episode in episodes_to_load:
+            if not episode.get("monitored", False):
+                monitor_episode_ids.append(episode["id"])
+            if not episode.get("hasFile", False):
+                search_episode_ids.append(episode["id"])
+        
+        try:
+            if monitor_episode_ids:
+                self.__monitor_media_episodes(monitor_episode_ids, True)
+            if search_episode_ids:
+                self.__search_media_episodes(search_episode_ids)
+        except requests.exceptions.RequestException as err:
+            logger.error("[SONARR] Failed to monitor %s. Error: %s", series.get("title"), err)
+            return 0
 
         unmonitor_episode_ids = []
         delete_episode_file_ids = []
@@ -149,13 +168,13 @@ class SonarrClient:
         size_on_disk = 0
 
         if dry_run:
-            logger.info("[SONARR][DRY RUN] Would have unmonitored %s.", series.get("title"))
+            logger.info("[SONARR][DRY RUN] Would have unmonitored %s. Episodes unmonitored: %s", series.get("title"), len(unmonitor_episode_ids))
             return size_on_disk
 
         try:
             if unmonitor_episode_ids:
                 self.__monitor_media_episodes(unmonitor_episode_ids, False)
-                logger.info("[SONARR] Unmonitored %s.", series.get("title"))
+                logger.info("[SONARR] Unmonitored %s. Episodes unmonitored:", series.get("title"), len(unmonitor_episode_ids)
             if delete_episode_file_ids:
                 self.__delete_media_episodes(delete_episode_file_ids)
                 original_size_on_disk = series.get("statistics", {}).get("sizeOnDisk", 0)
@@ -280,13 +299,15 @@ class SonarrClient:
 
             if series.get("id") is not None:
                 ended = series.get("ended", False)
-                if not self.monitor_continuing_series or ended:
+                if self.dynamic_load.enabled:
+                    total_size += self.__handle_continuing_series(series, dry_run)
+                elif not self.monitor_continuing_series or ended:
                     total_size += self.__handle_ended_series(series, dry_run)
                 else:
                     total_size += self.__handle_continuing_series(series, dry_run)
 
         if dry_run:
-            logger.info("[SONARR][DRY_RUN] Total series: %s. Series eligible for deletion: %s. Series deleted: %s. Series exempt: %s. Total space freed: %s.", len(media), original_deletion_count, len(media_to_delete), exempt_count, convert_bytes(total_size))
+            logger.info("[SONARR][DRY RUN] Total series: %s. Series eligible for deletion: %s. Series deleted: %s. Series exempt: %s. Total space freed: %s.", len(media), original_deletion_count, len(media_to_delete), exempt_count, convert_bytes(total_size))
         else:
             logger.info("[SONARR] Total series: %s. Series eligible for deletion: %s. Series deleted: %s. Series exempt: %s. Total space freed: %s.", len(media), original_deletion_count, len(media_to_delete), exempt_count, convert_bytes(total_size))
 

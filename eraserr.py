@@ -2,7 +2,7 @@
 import argparse
 from src.main import main
 
-__version__ = "2.2.0"
+__version__ = "2.2.1"
 
 def add_arguments(arg_parser: argparse.ArgumentParser):
     '''
