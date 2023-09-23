@@ -174,7 +174,7 @@ class SonarrClient:
         try:
             if unmonitor_episode_ids:
                 self.__monitor_media_episodes(unmonitor_episode_ids, False)
-                logger.info("[SONARR] Unmonitored %s. Episodes unmonitored:", series.get("title"), len(unmonitor_episode_ids)
+                logger.info("[SONARR] Unmonitored %s. Episodes unmonitored: %s", series.get("title"), len(unmonitor_episode_ids))
             if delete_episode_file_ids:
                 self.__delete_media_episodes(delete_episode_file_ids)
                 original_size_on_disk = series.get("statistics", {}).get("sizeOnDisk", 0)
