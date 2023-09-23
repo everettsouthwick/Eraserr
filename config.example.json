@@ -39,7 +39,7 @@
     "overseerr": {
         "enabled": true,
         "api_key": "",
-        "base_url": "http://overseerr.domain.com/api/v1",
+        "base_url": "https://overseerr.domain.com/api/v1",
         "fetch_limit": 20
     },
     "experimental": {
