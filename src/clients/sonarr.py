@@ -1,4 +1,5 @@
 """Sonarr API client."""
+import time
 from datetime import datetime
 import requests
 from retry import retry
@@ -191,9 +192,12 @@ class SonarrClient:
 
     def __get_episodes_to_load_and_unload(self, series, dynamic_media):
         episodes = self.__get_media_episodes(series.get("id"))
-        filtered_episodes = [episode for episode in episodes if episode.get("seasonNumber", -1) != 0 and episode.get("airDate") < datetime.now().isoformat()]
+        filtered_episodes = [episode for episode in episodes if episode.get("seasonNumber", -1) != 0 and episode.get("airDate") < datetime.now().isoformat() and episode.get("airDate") > datetime.fromtimestamp(time.time() - self.dynamic_load.watched_deletion_threshold).isoformat()]
         sorted_episodes = sorted(filtered_episodes, key=lambda x: (x['seasonNumber'], x['episodeNumber']))
         episode_index = next((index for (index, episode) in enumerate(sorted_episodes) if episode.get("seasonNumber", 0) == dynamic_media.season and episode.get("episodeNumber", 0) == dynamic_media.episode), None)
+
+        episodes_to_load = []
+        episodes_to_unload = []
         if episode_index is not None:
             load_index_start = episode_index + 1
             load_index_end = episode_index + self.dynamic_load.episodes_to_keep + 1
@@ -207,8 +211,11 @@ class SonarrClient:
         return episodes_to_load, episodes_to_unload
 
     def __handle_episode_loading(self, episodes_to_load, series, dry_run):
+        if not episodes_to_load:
+            return
+        
         monitor_episode_ids = []
-        search_episode_ids = []
+        search_episode_ids = [] 
         for episode in episodes_to_load:
             if not episode.get("monitored", False):
                 monitor_episode_ids.append(episode["id"])
@@ -228,6 +235,9 @@ class SonarrClient:
             logger.info("[SONARR][DYNAMIC LOAD] Loading S%sE%s of %s", episode.get("seasonNumber"), episode.get("episodeNumber"), series.get("title"))
 
     def __handle_episode_unloading(self, episodes_to_unload, series, dry_run):
+        if not episodes_to_unload:
+            return 0
+
         unmonitor_episode_ids = []
         delete_episode_file_ids = []
         for episode in episodes_to_unload:
