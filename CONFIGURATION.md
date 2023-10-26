@@ -77,7 +77,7 @@ Set the interval at which the script runs by replacing the `schedule_interval` v
 
 ```json
 "plex": {
-    "base_url": "https://host:port",
+    "base_url": "https://plex.domain.com",
     "token": ""
 }
 ```
@@ -94,7 +94,7 @@ Replace the empty `token` value with your Plex token.
 "radarr": {
     "enabled": true,
     "api_key": "",
-    "base_url": "https://host:port/api/v3",
+    "base_url": "https://radarr.domain.com/api/v3",
     "exempt_tag_names": [
         "exempt-from-auto-delete",
         "some-other-tag"
@@ -128,7 +128,7 @@ Set the threshold for unwatched media deletion by replacing the `unwatched_delet
 "sonarr": {
     "enabled": true,
     "api_key": "",
-    "base_url": "https://host:port/api/v3",
+    "base_url": "https://sonarr.domain.com/api/v3",
     "monitor_continuing_series": true,
     "dynamic_load": {
         "enabled": false,
@@ -199,7 +199,7 @@ Set the threshold for unwatched media deletion by replacing the `unwatched_delet
 "overseerr": {
     "enabled": true,
     "api_key": "",
-    "base_url": "http://host:port/api/v1",
+    "base_url": "https://overseerr.domain.com/api/v1",
     "fetch_limit": 20
 }
 ```

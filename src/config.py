@@ -91,10 +91,10 @@ class Config:
         self.dry_run = True
         self.log_level = "INFO"
         self.schedule_interval = 86400
-        self.plex = PlexConfig("https://host:port", "")
-        self.radarr = RadarrConfig(False, "", "https://host:port/api/v3", [], 7776000, 2592000)
-        self.sonarr = SonarrConfig(False, "", "https://host:port/api/v3", True, [], DynamicLoad(False, 3, 3, 7776000, 600), 7776000, 2592000)
-        self.overseerr = OverseerrConfig(False, "", "http://host:port/api/v1", 10)
+        self.plex = PlexConfig("https://plex.domain.com", "")
+        self.radarr = RadarrConfig(False, "", "https://radarr.domain.com/api/v3", [], 7776000, 2592000)
+        self.sonarr = SonarrConfig(False, "", "https://sonarr.domain.com/api/v3", True, [], DynamicLoad(False, 3, 3, 7776000, 600), 7776000, 2592000)
+        self.overseerr = OverseerrConfig(False, "", "https://overseerr.domain.com/api/v1", 10)
         self.experimental = Experimental(FreeSpace(False, 0, "", False, False, ProgressiveDeletion(False, 0, 86400)))
         
         config = self._get_config()
@@ -133,14 +133,14 @@ class Config:
             self.log_level = self._get_value_or_default(config, "log_level", "INFO")
             self.schedule_interval = self._get_value_or_default(config, "schedule_interval", 86400, True)
             plex_config = self._get_value_or_default(config, "plex", {})
-            self.plex = PlexConfig(self._get_value_or_default(plex_config, "base_url", "https://host:port"), self._get_value_or_default(plex_config, "token", ""))
+            self.plex = PlexConfig(self._get_value_or_default(plex_config, "base_url", "https://plex.domain.com"), self._get_value_or_default(plex_config, "token", ""))
             radarr_config = self._get_value_or_default(config, "radarr", {})
-            self.radarr = RadarrConfig(self._get_value_or_default(radarr_config, "enabled", False), self._get_value_or_default(radarr_config, "api_key", ""), self._get_value_or_default(radarr_config, "base_url", "https://host:port/api/v3"), self._get_value_or_default(radarr_config, "exempt_tag_names", []), self._get_value_or_default(radarr_config, "watched_deletion_threshold", 7776000, True), self._get_value_or_default(radarr_config, "unwatched_deletion_threshold", 2592000, True))
+            self.radarr = RadarrConfig(self._get_value_or_default(radarr_config, "enabled", False), self._get_value_or_default(radarr_config, "api_key", ""), self._get_value_or_default(radarr_config, "base_url", "https://radarr.domain.com/api/v3"), self._get_value_or_default(radarr_config, "exempt_tag_names", []), self._get_value_or_default(radarr_config, "watched_deletion_threshold", 7776000, True), self._get_value_or_default(radarr_config, "unwatched_deletion_threshold", 2592000, True))
             sonarr_config = self._get_value_or_default(config, "sonarr", {})
             dynamic_load_config = self._get_value_or_default(sonarr_config, "dynamic_load", {})
-            self.sonarr = SonarrConfig(self._get_value_or_default(sonarr_config, "enabled", False), self._get_value_or_default(sonarr_config, "api_key", ""), self._get_value_or_default(sonarr_config, "base_url", "https://host:port/api/v3"), self._get_value_or_default(sonarr_config, "monitor_continuing_series", True), self._get_value_or_default(sonarr_config, "exempt_tag_names", []), DynamicLoad(self._get_value_or_default(dynamic_load_config, "enabled", False), self._get_value_or_default(dynamic_load_config, "episodes_to_load", 3), self._get_value_or_default(dynamic_load_config, "episodes_to_keep", 3), self._get_value_or_default(dynamic_load_config, "watched_deletion_threshold", 7776000, True), self._get_value_or_default(dynamic_load_config, "schedule_interval", 600, True)), self._get_value_or_default(sonarr_config, "watched_deletion_threshold", 7776000, True), self._get_value_or_default(sonarr_config, "unwatched_deletion_threshold", 2592000, True))
+            self.sonarr = SonarrConfig(self._get_value_or_default(sonarr_config, "enabled", False), self._get_value_or_default(sonarr_config, "api_key", ""), self._get_value_or_default(sonarr_config, "base_url", "https://sonarr.domain.com/api/v3"), self._get_value_or_default(sonarr_config, "monitor_continuing_series", True), self._get_value_or_default(sonarr_config, "exempt_tag_names", []), DynamicLoad(self._get_value_or_default(dynamic_load_config, "enabled", False), self._get_value_or_default(dynamic_load_config, "episodes_to_load", 3), self._get_value_or_default(dynamic_load_config, "episodes_to_keep", 3), self._get_value_or_default(dynamic_load_config, "watched_deletion_threshold", 7776000, True), self._get_value_or_default(dynamic_load_config, "schedule_interval", 600, True)), self._get_value_or_default(sonarr_config, "watched_deletion_threshold", 7776000, True), self._get_value_or_default(sonarr_config, "unwatched_deletion_threshold", 2592000, True))
             overseerr_config = self._get_value_or_default(config, "overseerr", {})
-            self.overseerr = OverseerrConfig(self._get_value_or_default(overseerr_config, "enabled", False), self._get_value_or_default(overseerr_config, "api_key", ""), self._get_value_or_default(overseerr_config, "base_url", "http://host:port/api/v1"), self._get_value_or_default(overseerr_config, "fetch_limit", 10))
+            self.overseerr = OverseerrConfig(self._get_value_or_default(overseerr_config, "enabled", False), self._get_value_or_default(overseerr_config, "api_key", ""), self._get_value_or_default(overseerr_config, "base_url", "https://overseerr.domain.com/api/v1"), self._get_value_or_default(overseerr_config, "fetch_limit", 10))
             experimental_config = self._get_value_or_default(config, "experimental", {})
             free_space_config = self._get_value_or_default(experimental_config, "free_space", {})
             progressive_deletion_config = self._get_value_or_default(free_space_config, "progressive_deletion", {})
