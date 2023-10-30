@@ -1,4 +1,6 @@
 """This file contains utility functions for the project."""
+from datetime import datetime
+
 def convert_bytes(num):
     """
     This function will convert bytes to MB, GB, or TB
@@ -20,3 +22,9 @@ def convert_seconds(num):
         num /= duration
 
     return f"{num:3.0f} days".strip()
+
+def convert_to_datetime(iso_string):
+    """
+    This function will convert an ISO 8601 string to a datetime object
+    """
+    return datetime.fromisoformat(iso_string.replace("Z", "+00:00"))
