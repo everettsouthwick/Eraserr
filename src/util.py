@@ -1,5 +1,6 @@
 """This file contains utility functions for the project."""
 from datetime import datetime
+import pytz
 
 def convert_bytes(num):
     """
@@ -25,6 +26,7 @@ def convert_seconds(num):
 
 def convert_to_datetime(iso_string):
     """
-    This function will convert an ISO 8601 string to a datetime object
+    This function will convert an ISO string to a datetime object
     """
-    return datetime.fromisoformat(iso_string.replace("Z", "+00:00"))
+    utc_dt = datetime.fromisoformat(iso_string.replace("Z", "+00:00"))
+    return utc_dt.astimezone(pytz.utc).replace(tzinfo=None)
