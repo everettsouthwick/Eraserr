@@ -82,6 +82,14 @@ class JobRunner:
             logger.debug("[JOB] Fetching and deleting series")
             self.get_and_delete_series()
 
+        if self.free_space.enabled and self.progressive_deletion.enabled and deletion_cycle >= self.progressive_deletion.maximum_deletion_cycles:
+            self.radarr_watched_deletion_threshold += (self.progressive_deletion.threshold_reduction_per_cycle * deletion_cycle)
+            self.radarr_unwatched_deletion_threshold += (self.progressive_deletion.threshold_reduction_per_cycle * deletion_cycle)
+            self.sonarr_watched_deletion_threshold += (self.progressive_deletion.threshold_reduction_per_cycle * deletion_cycle)
+            self.sonarr_unwatched_deletion_threshold += (self.progressive_deletion.threshold_reduction_per_cycle * deletion_cycle)
+            logger.info("[JOB][FREE SPACE] Maximum deletion cycles reached. Increasing deletion thresholds to original levels. New thresholds: Radarr watched: %s. Radarr unwatched: %s. Sonarr watched: %s. Sonarr unwatched: %s.", convert_seconds(self.radarr_watched_deletion_threshold), convert_seconds(self.radarr_unwatched_deletion_threshold), convert_seconds(self.sonarr_watched_deletion_threshold), convert_seconds(self.sonarr_unwatched_deletion_threshold))
+            return
+
         if self.free_space.enabled and self.progressive_deletion.enabled and self.__free_space_below_minimum():
             self.radarr_watched_deletion_threshold -= self.progressive_deletion.threshold_reduction_per_cycle if self.radarr_watched_deletion_threshold - self.progressive_deletion.threshold_reduction_per_cycle > 0 else 0
             self.radarr_unwatched_deletion_threshold -= self.progressive_deletion.threshold_reduction_per_cycle if self.radarr_unwatched_deletion_threshold - self.progressive_deletion.threshold_reduction_per_cycle > 0 else 0
