@@ -111,7 +111,8 @@ class OverseerrClient:
                     if dry_run:
                         logger.info("[OVERSEERR][DRY RUN] Would have deleted %s", media_title)
                         if item_request_id:
-                            logger.info("[OVERSEERR][DRY RUN] Would have deleted request ID %s", item_request_id)
+                            logger.debug("[OVERSEERR][DRY RUN] Request ID: %s", item_request_id)
+                            logger.info("[OVERSEERR][DRY RUN] Would have deleted the request for %s", media_title)
                         continue
 
                     try:
