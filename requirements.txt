@@ -2,4 +2,4 @@ PlexAPI==4.15.16
 Requests==2.32.3
 retry==0.9.2
 schedule==1.2.2
-pytz==2024.1
+pytz==2024.2
