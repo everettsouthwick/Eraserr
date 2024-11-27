@@ -2,6 +2,8 @@
 
 ![image](https://github.com/everettsouthwick/Eraserr/assets/8216991/a45ae766-6a59-4d8d-b4e0-5237a3ffb3c9)
 
+👋 **Check out my AI project [Seren](https://getseren.com)!**
+
 Eraserr is a Python script designed to help keep your Plex servers clean. It deletes unwatched or stale media by leveraging the functionality of Radarr, Sonarr, and Overseerr.
 
 ## Table of Contents
