@@ -1,6 +1,7 @@
 # Eraserr
 
-![image](https://github.com/everettsouthwick/Eraserr/assets/8216991/a45ae766-6a59-4d8d-b4e0-5237a3ffb3c9)
+![Image](https://github.com/user-attachments/assets/811c84a5-c82d-4d36-88d4-fcb09005886c)
+
 
 👋 **Check out my AI project [Seren](https://getseren.com)!**
 
