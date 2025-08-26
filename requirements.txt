@@ -1,4 +1,4 @@
-PlexAPI==4.17.0
+PlexAPI==4.17.1
 Requests==2.32.5
 retry==0.9.2
 schedule==1.2.2
